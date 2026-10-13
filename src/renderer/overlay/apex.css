@@ -1,0 +1,18 @@
+#wheel { filter: drop-shadow(0 3px 12px #0006); }
+#wheel .apex-wheel-icon { filter: brightness(0) invert(1); opacity: .95; }
+#wheel .apex-wheel-icon.selected { filter: brightness(0); }
+.apex-center { font: 600 18px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: white; letter-spacing: 0; }
+.apex-back { font: 12px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #bcbfc2; letter-spacing: 0; }
+.apex-ping { animation: apex-life var(--dur) linear forwards; }
+.apex-ping .art { top: calc(var(--size) * -.88); animation: none; }
+.apex-ping .art img { filter: drop-shadow(0 2px 2px #000); }
+.apex-ping .pop { animation: apex-in .22s ease-out both; }
+.apex-inner { position: absolute; inset: 0; background: var(--c); mask-size: contain; mask-repeat: no-repeat; mask-position: center; }
+.apex-stem { position: absolute; width: 2px; height: calc(var(--size) * .36); bottom: 0; left: -1px; background: var(--c); box-shadow: 0 0 3px #000; }
+.apex-anchor { position: absolute; width: 6px; height: 6px; left: -3px; top: -3px; transform: rotate(45deg); background: var(--c); }
+.apex-pulse { position: absolute; width: var(--size); height: var(--size); left: calc(var(--size) * -.5); top: calc(var(--size) * -.88); background: var(--c); mask-size: contain; mask-position: center; mask-repeat: no-repeat; animation: apex-pulse .85s ease-out 2; }
+.apex-caption { position: absolute; top: 12px; left: -100px; width: 200px; text-align: center; color: white; font: 600 14px 'Segoe UI', 'Microsoft YaHei', sans-serif; text-shadow: 0 1px 3px #000, 0 0 5px #000; letter-spacing: 0; }
+.apex-ping .tag { top: 35px; }
+@keyframes apex-in { from { transform: scale(1.65); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes apex-pulse { from { transform: scale(.85); opacity: .85; } to { transform: scale(1.85); opacity: 0; } }
+@keyframes apex-life { 0% { opacity: 0; } 6%, 85% { opacity: 1; } 100% { opacity: 0; } }
