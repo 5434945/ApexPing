@@ -61,13 +61,13 @@ describe('language', () => {
     expect(strings('zh-CN').updateToastBody('0.5.1')).toContain('托盘');
   });
 
-  it('says that mute and the incoming limit cover emotes as well as pings, and titles update error toasts', () => {
+  it('no longer advertises removed emotes in room controls', () => {
     for (const lang of ['en', 'zh-CN'] as const) {
       const t = strings(lang);
       const emote = lang === 'en' ? 'emote' : '表情';
-      expect(t.roomMuteDesc).toContain(emote);
-      expect(t.roomLimit).toContain(emote);
-      expect(t.roomLimitDesc).toContain(emote);
+      expect(t.roomMuteDesc).not.toContain(emote);
+      expect(t.roomLimit).not.toContain(emote);
+      expect(t.roomLimitDesc).not.toContain(emote);
       expect(t.updateErrorToastTitle).not.toBe('');
     }
   });

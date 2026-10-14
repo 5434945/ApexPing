@@ -60,15 +60,6 @@ export function spawnPing(layer: HTMLElement, def: PingDef, x: number, y: number
     art.append(pop);
   }
   root.append(art);
-  const caption = div('apex-caption');
-  caption.textContent = def.name;
-  root.append(caption);
-  if (opts.tag) {
-    const tag = div('tag');
-    tag.textContent = opts.tag.name; // never HTML: the name comes from another machine
-    tag.style.setProperty('--tag', TAG_COLORS[opts.tag.color] ?? TAG_COLORS[0]);
-    root.append(tag);
-  }
   while (layer.childElementCount >= MAX_PINGS) layer.firstElementChild?.remove();
   layer.append(root);
   setTimeout(() => root.remove(), opts.durationS * 1000 + 150);

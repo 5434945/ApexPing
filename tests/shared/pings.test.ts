@@ -9,12 +9,12 @@ const assets = resolve(__dirname, '../../assets');
 
 describe('ping table', () => {
   it('lays out the default wheel top then clockwise', () => {
-    expect(DEFAULT_WHEEL).toEqual(['generic', 'danger', 'bait', 'omw', 'push', 'visioncleared', 'needvision', 'missing']);
+    expect(DEFAULT_WHEEL).toEqual(['enemyvision', 'audio', 'bait', 'push', 'assist', 'visioncleared', 'needvision', 'missing']);
     expect(DEFAULT_WHEEL_PINGS.map((p) => p.id)).toEqual(DEFAULT_WHEEL);
   });
 
   it('offers regroup, avoid and team attack beyond the default wheel', () => {
-    expect(ALL_PINGS.filter(p => !DEFAULT_WHEEL.includes(p.id)).map(p => p.id).sort()).toEqual(['allin', 'assist', 'enemyvision']);
+    expect(ALL_PINGS.filter(p => !DEFAULT_WHEEL.includes(p.id)).map(p => p.id).sort()).toEqual(['allin', 'danger', 'generic', 'omw']);
   });
 
   it('uses different original sources for enemy and location pings', () => {

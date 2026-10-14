@@ -1,5 +1,5 @@
-import type { EmoteArt, EmoteFile, EmoteRef, ImportResult } from './emotes';
 import type { PingId } from './pings';
+import type { LegendId } from './legends';
 import type { Platform } from './platform';
 import type { HelperStatus, WheelKind } from './protocol';
 import type { JoinResult, RoomState } from './room';
@@ -26,17 +26,14 @@ export interface OverlayEvents {
   'wheel:release': Point & { wheel?: WheelKind };
   'wheel:cancel': null;
   /** `tag` marks a ping from another room member. */
-  'ping:spawn': Point & { id: PingId; tag?: PingTag };
-  /** `owner` is 'self', 'preview' or a room member: each owner has at most one emote on screen. */
-  'emote:spawn': Point & { owner: string; art: EmoteArt; tag?: PingTag };
-  'emote:clear': { owner: string };
+  'ping:spawn': Point & { id: PingId; tag?: PingTag; legend?: LegendId };
   'toast:show': { title: string; body: string };
 }
 
 export type OverlayChannel = keyof OverlayEvents;
 
 export const OVERLAY_CHANNELS: readonly OverlayChannel[] = [
-  'overlay:settings', 'wheel:open', 'wheel:move', 'wheel:release', 'wheel:cancel', 'ping:spawn', 'emote:spawn', 'emote:clear',
+  'overlay:settings', 'wheel:open', 'wheel:move', 'wheel:release', 'wheel:cancel', 'ping:spawn',
   'toast:show',
 ];
 
@@ -79,12 +76,6 @@ export interface SettingsApi {
   onStatus(cb: (s: AppStatus) => void): () => void;
   setEnabled(on: boolean): Promise<void>;
   previewPing(id: PingId): Promise<void>;
-  /** Plays the emote in the middle of the primary display, without sharing it. */
-  previewEmote(ref: EmoteRef): Promise<void>;
-  /** Saves an image prepared by the settings window and adds it to the imported emotes. */
-  importEmote(file: EmoteFile): Promise<ImportResult>;
-  /** Deletes an imported emote's files and entry; wheel slots that used it fall back. */
-  removeEmote(id: EmoteRef): Promise<void>;
   getAbout(): Promise<About>;
   openSettingsFolder(): Promise<void>;
   openProjectPage(): Promise<void>;

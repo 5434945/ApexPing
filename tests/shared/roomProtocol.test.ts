@@ -20,8 +20,14 @@ describe('encode / decode', () => {
     expect(decodeMessage(encodeMessage({ ...ping, x: 0.123456, y: 0.987654 }))).toMatchObject({ x: 0.1235, y: 0.9877 });
   });
 
-  it('rounds an emote’s x and y to 4 decimals too', () => {
-    expect(decodeMessage(encodeMessage({ ...emote, x: 0.123456, y: 0.987654 }))).toMatchObject({ x: 0.1235, y: 0.9877 });
+  it('rejects retired emote packets', () => {
+    expect(decodeMessage(encodeMessage({ ...emote, x: 0.123456, y: 0.987654 }))).toBeNull();
+  });
+
+  it('round trips the sender hero, and rejects unsafe or unknown hero names', () => {
+    expect(decodeMessage(encodeMessage({...ping,legend:'mirage'}))).toMatchObject({legend:'mirage'});
+    expect(validateMessage({...ping,legend:'../secret'})).toBeNull();
+    expect(validateMessage({...ping,legend:'not-a-hero'})).toBeNull();
   });
 
   it('rejects bytes that are not JSON', () => {
@@ -77,43 +83,6 @@ describe('validateMessage', () => {
 
   it('sanitises the name', () => {
     expect(validateMessage({ ...presence, name: '‮Alex\u0000' })).toMatchObject({ name: 'Alex' });
-  });
-});
-
-describe('emote messages', () => {
-  it('validates a bundled and a custom emote, and round-trips them', () => {
-    for (const e of ['gg', CUSTOM_REF]) {
-      const m: EmoteMsg = { ...emote, e };
-      expect(validateMessage(m)).toEqual(m);
-      expect(decodeMessage(encodeMessage(m))).toEqual(m);
-    }
-  });
-
-  it('accepts a well-formed slug this version does not know (a newer peer’s emote)', () => {
-    expect(validateMessage({ ...emote, e: 'brand_new_2' })).toEqual({ ...emote, e: 'brand_new_2' });
-  });
-
-  it.each([
-    ['empty ref', { ...emote, e: '' }],
-    ['upper-case slug', { ...emote, e: 'GG' }],
-    ['slug with a path', { ...emote, e: '../gg' }],
-    ['slug over 40 characters', { ...emote, e: 'a'.repeat(41) }],
-    ['short custom hash', { ...emote, e: 'c:0123' }],
-    ['upper-case custom hash', { ...emote, e: `c:${'ABCDEF0123456789'.repeat(2)}` }],
-    ['non-string ref', { ...emote, e: 7 }],
-    ['missing ref', { ...emote, e: undefined }],
-    ['display 0', { ...emote, d: 0 }],
-    ['display 17', { ...emote, d: 17 }],
-    ['x above 1', { ...emote, x: 1.5 }],
-    ['x below 0', { ...emote, x: -0.01 }],
-    ['infinite y', { ...emote, y: Infinity }],
-    ['string y', { ...emote, y: '0.5' }],
-  ])('rejects %s', (_label, raw) => {
-    expect(validateMessage(raw)).toBeNull();
-  });
-
-  it('keeps known fields only', () => {
-    expect(validateMessage({ ...emote, extra: 'ignored', ping: 'danger' })).toEqual(emote);
   });
 });
 

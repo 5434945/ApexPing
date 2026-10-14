@@ -1,7 +1,6 @@
-import { readdirSync, rmSync } from 'node:fs';
+import { existsSync, readdirSync, rmSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { Plugin } from 'vite';
-import { allEmoteAssetFiles } from '../src/shared/emotes';
 import { allSoundNames, allTextureNames } from '../src/shared/pings';
 
 /**
@@ -21,9 +20,10 @@ export function pruneAssets(): Plugin {
       const keep: Record<string, Set<string>> = {
         textures: new Set(allTextureNames().map((n) => `${n}.png`)),
         sounds: new Set(allSoundNames().map((n) => `${n}.wav`)),
-        emotes: new Set(allEmoteAssetFiles().map((f) => f.slice('emotes/'.length))),
+        emotes: new Set<string>(),
       };
       for (const [dir, names] of Object.entries(keep)) {
+        if (!existsSync(join(outDir, dir))) continue;
         for (const file of readdirSync(join(outDir, dir))) {
           if (!names.has(file)) rmSync(join(outDir, dir, file));
         }

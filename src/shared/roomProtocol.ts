@@ -1,5 +1,5 @@
-import { isEmoteRefShape, type EmoteRef } from './emotes';
 import { isPingId, type PingId } from './pings';
+import { isLegendId, type LegendId } from './legends';
 import { isTagColor } from './roomColors';
 
 /** Bumped when room messages change incompatibly. Peers on another version are shown as "needs update". */
@@ -30,6 +30,7 @@ export interface PresenceMsg extends Base {
 export interface PingMsg extends Base {
   t: 'ping';
   ping: PingId;
+  legend?: LegendId;
   /** Display number: 1 = primary. */
   d: number;
   /** Position as a fraction of that display, 0–1. */
@@ -40,7 +41,7 @@ export interface PingMsg extends Base {
 export interface EmoteMsg extends Base {
   t: 'emote';
   /** A bundled slug (possibly one only a newer app has) or 'c:' + hash of an imported emote. */
-  e: EmoteRef;
+  e: string;
   d: number;
   x: number;
   y: number;
@@ -86,13 +87,11 @@ export function validateMessage(raw: unknown): RoomMessage | null {
       const { ping, d, x, y } = raw;
       if (!isPingId(ping) || !Number.isInteger(d) || (d as number) < 1 || (d as number) > MAX_DISPLAY) return null;
       if (!isUnit(x) || !isUnit(y)) return null;
-      return { t, ...base, ping, d: d as number, x, y };
+      if (raw.legend !== undefined && !isLegendId(raw.legend)) return null;
+      return { t, ...base, ping, d: d as number, x, y, ...(isLegendId(raw.legend) ? { legend: raw.legend } : {}) };
     }
     case 'emote': {
-      const { e, d, x, y } = raw;
-      if (!isEmoteRefShape(e) || !Number.isInteger(d) || (d as number) < 1 || (d as number) > MAX_DISPLAY) return null;
-      if (!isUnit(x) || !isUnit(y)) return null;
-      return { t, ...base, e, d: d as number, x, y };
+      return null;
     }
     case 'bye':
       return { t, ...base };

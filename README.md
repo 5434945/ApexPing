@@ -1,8 +1,10 @@
 # ApexPing
 
-Windows 桌面 Apex 风格标记轮盘，基于 [darrenprx/lolPing](https://github.com/darrenprx/lolPing) 改造。当前版本：0.1.0 测试版。
+Windows 桌面 Apex 风格标记轮盘，基于 [darrenprx/lolPing](https://github.com/darrenprx/lolPing) 改造。当前版本：0.2.0 测试版。
 
 这是独立桌面覆盖层，不注入游戏进程，不向 Apex 游戏内发送标记。
+
+[下载 Windows 便携版](https://github.com/5434945/ApexPing/releases/tag/v0.2.0) · [本次更新说明](CHANGELOG.md)
 
 ## 操作
 
@@ -14,10 +16,12 @@ Windows 桌面 Apex 风格标记轮盘，基于 [darrenprx/lolPing](https://gith
 
 ## 当前实现
 
-- 八方向轮盘、中文标记、选中反馈、脉冲与淡出动画。
+- 按官方 Arsenal 参考图调整八方向轮盘，加入敌人声音、避开区域和集合；桌面标记不再显示下方文字。
 - 使用本机 Apex 游戏文件中的原版图标和提示音源；映射记录在 `assets/apex-provenance.json`。
-- 动画为桌面端重现，不是游戏动画逐帧复制；音效尚未复刻完整游戏混音，未加入英雄语音。
-- 保留上游房间和可选 LoL 表情功能，表情触发默认关闭。
+- 全部 28 位英雄，普通话 / 英语切换，语音音量独立设置。12 个标记项共 672 个语音文件，逐条来源及 SHA-256 见 `assets/voice-manifest.json`。
+- 动画为桌面端重现，不是游戏动画逐帧复制；通用提示音使用原版源片段，尚未复刻完整游戏事件混音。
+- 删除表情入口、设置、导入、播放模块及打包素材；旧表情消息会被拒绝。
+- 房间标记携带发送方英雄身份，接收方选择听中文或英文。旧客户端无英雄身份时不猜测角色、不播放错误角色语音。
 - 房间密钥命名空间与 lolPing 隔离；双方需使用此版本。自动更新默认关闭。
 - 配置使用 `%APPDATA%\ApexPing`，默认不开机启动。
 
@@ -37,10 +41,12 @@ npm run dev
 
 ## 验证状态
 
-本地 TypeScript 类型检查及生产构建通过，712 项自动化测试通过，原生钩子测试此前为 411 项通过。当前执行环境无法启动 Electron 窗口，因此尚未完成真实桌面热键、声音、多显示器、浮层和跨设备同步实测。构建成功不代表这些场景已验证。
+验证记录见交付目录的测试与界面检查报告。类型检查、自动化测试、浏览器渲染检查和原生桌面实测是不同层级，不能互相替代。尚不能宣称真实桌面热键、多显示器、扬声器音质或跨设备同步全部完成实测。
 
 ## 许可证与素材
 
 代码沿用上游 MIT 许可证，保留 [LICENSE](LICENSE) 和原作者 Danrui Meng 的版权声明。上游说明保存在 [docs/UPSTREAM_README.md](docs/UPSTREAM_README.md)。
 
-Apex Legends 图标和音频归 EA / Respawn 所有；原项目保留的 LoL 素材归其各自权利人所有。MIT 许可证不授予这些游戏素材的权利。本仓库用于个人原型保存，不应将游戏素材误标为 MIT 或未经许可公开分发。
+Apex Legends 图标和音频归 EA / Respawn 及各自权利人所有。MIT 许可证不授予这些游戏素材的权利。公开资料用于核对；双语原声来自本机已安装游戏，不是从公开网站下载的完整语音库。详见 [素材核对记录](docs/APEX_REFERENCE.md)。发布原版素材前应单独确认适用许可。
+
+This project is not endorsed by or affiliated with EA or its licensors.

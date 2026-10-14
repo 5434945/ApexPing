@@ -42,7 +42,10 @@ export class ApexWheel {
   get isOpen(): boolean { return this.opened; }
   setItems(items: readonly WheelItem[]): void {
     this.items = items;
-    this.icons.forEach((icon, i) => icon.setAttribute('href', items[i]?.icon ?? ''));
+    this.icons.forEach((icon, i) => {
+      icon.setAttribute('href', items[i]?.icon ?? '');
+      icon.classList.toggle('hostile', ['danger','audio','push','allin','missing'].includes(items[i]?.key));
+    });
   }
   open(x: number, y: number): void {
     this.x = x; this.y = y;

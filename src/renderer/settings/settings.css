@@ -49,7 +49,7 @@ main.content { overflow: auto; padding: 4px 28px 28px 20px; }
 .weCenter { position: absolute; left: 50%; top: 50%; width: 92px; height: 92px; margin: -46px 0 0 -46px; border-radius: 50%; display: grid; place-items: center; align-content: center;
   background: radial-gradient(circle, rgba(20,26,38,.95), rgba(10,14,22,.9)); border: 1px solid rgba(200,170,110,.35); cursor: grab; transition: box-shadow .12s; }
 .weCenter img { width: 40px; height: 40px; pointer-events: none; }
-.weCenter span { font-size: 10px; font-weight: 600; letter-spacing: .08em; color: #1fa9e0; pointer-events: none; }
+.weCenter span { font-size: 10px; font-weight: 600; letter-spacing: 0; color: #f3ae4b; pointer-events: none; }
 .weCenter.hot { box-shadow: 0 0 0 3px var(--colorBrandStroke1); }
 .weCenter.off { opacity: .45; }
 .weSlot.picked, .weCenter.picked { outline: 2px dashed var(--colorBrandStroke1); outline-offset: 2px; }
@@ -64,7 +64,7 @@ main.content { overflow: auto; padding: 4px 28px 28px 20px; }
 .weTile:hover { background: var(--colorNeutralBackground1Hover); }
 .weTile:active { transform: scale(.97); }
 .weTile.picked { outline: 2px solid var(--colorBrandStroke1); outline-offset: -1px; }
-.weTile img { width: 34px; height: 34px; pointer-events: none; }
+.weTile img { width: 34px; height: 34px; pointer-events: none; filter: drop-shadow(0 1px 2px #000c); }
 .weNew { position: absolute; top: 3px; left: 4px; font-size: 9px; font-weight: 600; color: var(--colorBrandForeground1); }
 .weWhere { position: absolute; top: 3px; right: 4px; font-size: 10px; color: var(--text3); }
 .weRemove { position: absolute; top: 3px; right: 3px; display: grid; place-items: center; width: 18px; height: 18px; padding: 0; border: 0; border-radius: 50%; font-size: 12px; cursor: pointer;

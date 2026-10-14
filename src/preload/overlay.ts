@@ -1,7 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import type { EmoteRef } from '../shared/emotes';
 import {
-  OVERLAY_ASSETS, OVERLAY_CHANNELS, OVERLAY_EMOTED, OVERLAY_PINGED, type OverlayChannel, type OverlayEvents,
+  OVERLAY_ASSETS, OVERLAY_CHANNELS, OVERLAY_PINGED, type OverlayChannel, type OverlayEvents,
 } from '../shared/ipc';
 import type { PingId } from '../shared/pings';
 
@@ -16,10 +15,6 @@ const api = {
   /** A wheel ping was placed here (CSS px in this overlay). */
   reportPing(id: PingId, x: number, y: number): void {
     ipcRenderer.send(OVERLAY_PINGED, { id, x, y });
-  },
-  /** A wheel emote was placed here (CSS px in this overlay). */
-  reportEmote(ref: EmoteRef, x: number, y: number): void {
-    ipcRenderer.send(OVERLAY_EMOTED, { ref, x, y });
   },
 };
 

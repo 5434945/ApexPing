@@ -296,94 +296,7 @@ describe('incoming pings', () => {
   });
 });
 
-describe('incoming emotes', () => {
-  let alex: Remote;
-  beforeEach(async () => {
-    await joinActive();
-    alex = new Remote('1111111111111111', 'lan:a', lan);
-    alex.presence({ name: 'Pa', color: 2 });
-  });
-
-  it('emits remote emotes with the sender’s tag, mapped onto the target display', () => {
-    alex.emote({ e: 'gg', d: 1, x: 0.5, y: 0.25 });
-    expect(emotes).toEqual([{ displayId: 100, x: 960, y: 270, ref: 'gg', peer: alex.peer, tag: { name: 'Pa', color: 2 } }]);
-    expect(pings).toHaveLength(0);
-  });
-
-  it('passes a custom ref and an unknown slug on unchanged, for the overlay to resolve', () => {
-    const custom = `c:${'ab'.repeat(16)}`;
-    alex.emote({ e: custom });
-    alex.emote({ e: 'from_the_future' });
-    expect(emotes.map((e) => e.ref)).toEqual([custom, 'from_the_future']);
-  });
-
-  it('keeps an emote at the very edge of the display inside it', () => {
-    alex.emote({ x: 0, y: 1 });
-    expect(emotes[0]).toMatchObject({ x: 0, y: 1080 });
-  });
-
-  it('drops an emote outside the display before it reaches the overlay, like a ping', () => {
-    for (const bad of [{ x: 1.5 }, { y: -0.1 }, { x: Number.NaN }, { d: 0 }, { e: 'No Way' }]) alex.emote(bad);
-    expect(emotes).toHaveLength(0);
-  });
-
-  it('uses the ping gates: strangers, paused, room muted, member muted and needs-update', () => {
-    new Remote('2222222222222222', 'lan:c', lan).emote();
-    room.setStatusFlags({ paused: true, roomMuted: false });
-    alex.emote();
-    room.setStatusFlags({ paused: false, roomMuted: true });
-    alex.emote();
-    room.setStatusFlags({ paused: false, roomMuted: false });
-    room.muteMember(alex.peer, true);
-    alex.emote();
-    room.muteMember(alex.peer, false);
-    alex.presence({ proto: 2 });
-    alex.emote();
-    expect(emotes).toHaveLength(0);
-    alex.presence({ proto: 1 });
-    alex.emote();
-    expect(emotes).toHaveLength(1);
-  });
-
-  it('drops an emote when there is no display to show it on, and shows a packet that arrives twice once', () => {
-    alex.emote({ d: 3 }); // this setup's resolveTarget only knows display 1
-    expect(emotes).toHaveLength(0);
-    const packet = alex.packet({ t: 'emote', e: 'gg', d: 1, x: 0, y: 0 });
-    lan.deliver('lan:a', packet);
-    lan.deliver('lan:b', packet);
-    expect(emotes).toHaveLength(1);
-  });
-
-  it('shares the incoming limit with pings', () => {
-    profile.limit = 5;
-    for (let i = 0; i < 3; i++) {
-      alex.ping();
-      alex.emote();
-    }
-    expect(pings.length + emotes.length).toBe(5);
-  });
-});
-
 describe('outgoing', () => {
-  it('sends an emote to each member over its path, and nothing when idle or paused', async () => {
-    room.sendEmote('gg', { d: 1, x: 0.1, y: 0.2 });
-    expect(lan.sent).toHaveLength(0);
-    await joinActive();
-    new Remote('1111111111111111', 'lan:a', lan).presence();
-    new Remote('2222222222222222', 'lan:b', lan).presence();
-    lan.sent = [];
-    room.sendEmote('gg', { d: 1, x: 0.1, y: 0.2 });
-    expect(lan.sent.map((s) => s.to).sort()).toEqual(['lan:a', 'lan:b']);
-    expect(sentMessages('lan:a')[0]).toMatchObject({ t: 'emote', e: 'gg', d: 1, x: 0.1, y: 0.2, peer: SELF });
-    room.setStatusFlags({ paused: true, roomMuted: false });
-    lan.sent = [];
-    room.sendEmote('gg', { d: 1, x: 0.1, y: 0.2 });
-    expect(lan.sent).toHaveLength(0);
-    room.setStatusFlags({ paused: false, roomMuted: true }); // muting the room only silences what we hear
-    lan.sent = [];
-    room.sendEmote('gg', { d: 1, x: 0.1, y: 0.2 });
-    expect(lan.sent).toHaveLength(2);
-  });
 
   it('sends a ping to each member over its path, and nothing when idle or paused', async () => {
     room.sendPing('omw', { d: 1, x: 0.1, y: 0.2 });
@@ -609,32 +522,6 @@ describe('internet over a shared transport', () => {
     vi.advanceTimersByTime(1000);
     for (let i = 0; i < 15; i++) inet.sendPing('omw', { d: 1, x: 0.5, y: 0.5 });
     expect(decode(net).filter((m) => m.t === 'ping')).toHaveLength(5);
-  });
-
-  it('sends an emote once over a shared transport, and pings and emotes share one cap of 5/s with bursts of 10', async () => {
-    await joinNow();
-    new Remote('1111111111111111', 'lan:a', lan).presence();
-    netPresence(new Remote('2222222222222222', 'net:b', lan));
-    netPresence(new Remote('3333333333333333', 'net:c', lan));
-    lan.sent = [];
-    net.sent = [];
-    inet.sendEmote('gg', { d: 1, x: 0.5, y: 0.5 });
-    expect(net.sent.map((s) => s.to)).toEqual(['*']);
-    expect(decode(net)[0]).toMatchObject({ t: 'emote', e: 'gg' });
-    net.sent = [];
-    vi.advanceTimersByTime(1000);
-    for (let i = 0; i < 15; i++) {
-      if (i % 2) inet.sendPing('omw', { d: 1, x: 0.5, y: 0.5 });
-      else inet.sendEmote('gg', { d: 1, x: 0.5, y: 0.5 });
-    }
-    const sent = (): string[] => decode(net).map((m) => m.t).filter((t) => t !== 'presence');
-    expect(sent()).toEqual(['emote', 'ping', 'emote', 'ping', 'emote', 'ping', 'emote', 'ping', 'emote', 'ping']);
-    const toLan = lan.sent.filter((s) => s.to === 'lan:a').map((s) => decodeMessage(open(KEYS.msgKey, s.packet)!)!.t);
-    expect(toLan.filter((t) => t === 'emote' || t === 'ping')).toHaveLength(16); // LAN members still get every one
-    net.sent = [];
-    vi.advanceTimersByTime(1000);
-    for (let i = 0; i < 15; i++) inet.sendEmote('gg', { d: 1, x: 0.5, y: 0.5 });
-    expect(sent()).toHaveLength(5);
   });
 
   it('never caps presence or bye over a shared transport', async () => {

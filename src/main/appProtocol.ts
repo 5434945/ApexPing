@@ -51,10 +51,6 @@ async function fetchUncached(file: string): Promise<Response> {
 export function serveAppScheme(opts: { rendererRoot: string | null; emoteDirs: () => readonly string[] }): void {
   protocol.handle(APP_SCHEME, (request) => {
     const url = new URL(request.url);
-    if (url.host === 'emotes') {
-      const file = resolveEmoteFile(opts.emoteDirs(), url.pathname);
-      return file ? fetchUncached(file) : notFound();
-    }
     if (url.host === 'app' && opts.rendererRoot) {
       const file = resolveInside(opts.rendererRoot, url.pathname);
       if (file) return net.fetch(pathToFileURL(file).toString());

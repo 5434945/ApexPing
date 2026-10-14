@@ -54,7 +54,7 @@ describe('hook-helper --simulate', () => {
     expect(simLines.map((e) => (e.type === 'sim' ? e.swallow : null))).toEqual([false, true, false, true]);
   });
 
-  it('opens and releases the emote wheel on Ctrl+drag', async () => {
+  it('does not expose emote events from an old helper configuration', async () => {
     const events = await simulate([
       config,
       sim('kdown', { vk: CTRL }),
@@ -63,11 +63,7 @@ describe('hook-helper --simulate', () => {
       sim('mup', { btn: 'left', x: 140, y: 90 }),
     ]);
     const protocol = events.filter((e) => e.type !== 'sim' && e.type !== 'ready');
-    expect(protocol).toEqual([
-      { type: 'wheelOpen', x: 100, y: 100, wheel: 'emote' },
-      { type: 'wheelMove', x: 130, y: 100, wheel: 'emote' },
-      { type: 'wheelRelease', x: 140, y: 90, wheel: 'emote' },
-    ]);
+    expect(protocol).toEqual([]);
     const simLines = events.filter((e) => e.type === 'sim');
     expect(simLines.map((e) => (e.type === 'sim' ? e.swallow : null))).toEqual([false, true, false, true]);
   });

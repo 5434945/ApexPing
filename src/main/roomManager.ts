@@ -1,5 +1,5 @@
 import { EventEmitter } from 'node:events';
-import type { EmoteRef } from '../shared/emotes';
+import type { LegendId } from '../shared/legends';
 import type { PingId } from '../shared/pings';
 import type { JoinResult, MemberPath, RoomMember, RoomStateCore } from '../shared/room';
 import { formatRoomCode, makeRoomCode, parseRoomCode } from '../shared/roomCode';
@@ -38,6 +38,7 @@ const SLEEP_GAP_MS = 5000;
 const SKEW_HINT_MS = 30_000;
 
 export interface RemotePing {
+  legend?: LegendId;
   displayId: number;
   x: number;
   y: number;
@@ -49,7 +50,7 @@ export interface RemoteEmote {
   displayId: number;
   x: number;
   y: number;
-  ref: EmoteRef;
+  ref: string;
   /** The sender, so their earlier emote can be replaced: everyone has one on screen at a time. */
   peer: string;
   tag: { name: string; color: number };
@@ -170,13 +171,10 @@ export class RoomManager extends EventEmitter {
     if (this.phase !== 'idle') this.stop();
   }
 
-  sendPing(ping: PingId, shared: { d: number; x: number; y: number }): void {
-    this.sendShared({ t: 'ping', ping, ...shared });
+  sendPing(ping: PingId, shared: { d: number; x: number; y: number }, legend?: LegendId): void {
+    this.sendShared({ t: 'ping', ping, ...shared, ...(legend ? { legend } : {}) });
   }
 
-  sendEmote(e: EmoteRef, shared: { d: number; x: number; y: number }): void {
-    this.sendShared({ t: 'emote', e, ...shared });
-  }
 
   /** A ping or an emote: each member gets it over its own route; shared transports get one send, within the relay cap. */
   private sendShared(body: Record<string, unknown>): void {
@@ -387,8 +385,7 @@ export class RoomManager extends EventEmitter {
     if (!target) return;
     const [x, y] = [msg.x * target.width, msg.y * target.height];
     const tag = { name: m.name, color: m.color };
-    if (msg.t === 'ping') this.emit('remotePing', { displayId: target.displayId, x, y, id: msg.ping, tag } satisfies RemotePing);
-    else this.emit('remoteEmote', { displayId: target.displayId, x, y, ref: msg.e, peer: m.peer, tag } satisfies RemoteEmote);
+    if (msg.t === 'ping') this.emit('remotePing', { displayId: target.displayId, x, y, id: msg.ping, tag, ...(msg.legend ? { legend: msg.legend } : {}) } satisfies RemotePing);
   }
 
   private onPresence(t: Transport, key: PeerKey, msg: PresenceMsg): void {

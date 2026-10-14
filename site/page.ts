@@ -7,6 +7,7 @@ import { DEFAULT_WHEEL_PINGS, textureUrl } from './pings';
 import { isSoundOn, setSoundOn } from './sound';
 
 const MEANINGS: Record<PingId, string> = {
+  audio: 'Enemy audio here.',
   danger: 'Back off, it’s not safe here.',
   push: 'Take the wave or the tower.',
   omw: 'I’m heading there.',

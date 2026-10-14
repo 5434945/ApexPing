@@ -17,8 +17,8 @@ describe('parseHelperLine', () => {
   });
 
   it('says which wheel a point event belongs to, defaulting to the ping wheel', () => {
-    expect(parseHelperLine('{"type":"wheelOpen","x":1,"y":2,"wheel":"emote"}')).toEqual({ type: 'wheelOpen', x: 1, y: 2, wheel: 'emote' });
-    expect(parseHelperLine('{"type":"click","x":1,"y":2,"wheel":"emote"}')).toEqual({ type: 'click', x: 1, y: 2, wheel: 'emote' });
+    expect(parseHelperLine('{"type":"wheelOpen","x":1,"y":2,"wheel":"emote"}')).toBeNull();
+    expect(parseHelperLine('{"type":"click","x":1,"y":2,"wheel":"emote"}')).toBeNull();
     expect(parseHelperLine('{"type":"wheelMove","x":1,"y":2,"wheel":"ping"}')).toEqual({ type: 'wheelMove', x: 1, y: 2, wheel: 'ping' });
     for (const wheel of ['"EMOTE"', '"mystery"', '1', 'true', 'null', '{}']) {
       expect(parseHelperLine(`{"type":"wheelRelease","x":1,"y":2,"wheel":${wheel}}`), wheel)
@@ -46,15 +46,6 @@ describe('commands', () => {
   it('builds a config command for a custom key trigger', () => {
     const c = configCommand({ ...DEFAULT_SETTINGS, trigger: { vk: 0x56 } }, false);
     expect(c).toMatchObject({ type: 'config', trigger: 'vk', triggerVk: 0x56, enabled: false });
-  });
-
-  it('sends the emote key: off, a named trigger, or a custom key', () => {
-    expect(configCommand({ ...DEFAULT_SETTINGS, emoteTrigger: 'off' }, true))
-      .toMatchObject({ emoteTrigger: 'off', emoteTriggerVk: 0, emoteClick: false });
-    expect(configCommand({ ...DEFAULT_SETTINGS, emoteTrigger: 'mouse5', emoteClick: true }, true))
-      .toMatchObject({ emoteTrigger: 'mouse5', emoteTriggerVk: 0, emoteClick: true });
-    expect(configCommand({ ...DEFAULT_SETTINGS, emoteTrigger: { vk: 0x54 } }, true))
-      .toMatchObject({ trigger: 'alt', triggerVk: 0, emoteTrigger: 'vk', emoteTriggerVk: 0x54 });
   });
 
   it('serializes one command per line', () => {

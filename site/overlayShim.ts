@@ -16,9 +16,6 @@ const api: OverlayApi = {
   reportPing() {
     // the demo has no room to share pings with
   },
-  reportEmote() {
-    // nor emotes
-  },
 };
 window.overlay = api;
 

@@ -12,12 +12,11 @@ import { overlaySettings, type Settings } from '../shared/settings';
 import { updateErrorText, type UpdateState } from '../shared/update';
 import { registerAppScheme, serveAppScheme } from './appProtocol';
 import { resolveTarget, toShared } from './displayNumbers';
-import { EmoteLibrary, resolveEmoteArt } from './emoteLibrary';
 import { InputBridge } from './inputBridge';
 import { LanTransport } from './lanTransport';
 import { RELAYS } from './relays';
 import { RelayTransport } from './relayTransport';
-import { OverlayManager, type SharedEmote, type SharedPing } from './overlayManager';
+import { OverlayManager, type SharedPing } from './overlayManager';
 import { assetPath, buildResourcePath, helperExePath, IS_MAC, PLATFORM, settingsDir } from './paths';
 import { deriveRoomKeys } from './roomCrypto';
 import { RoomManager, type RoomToast } from './roomManager';
@@ -69,10 +68,9 @@ function setMacMenu(): void {
 }
 
 function start(): void {
-  const library = new EmoteLibrary(join(settingsDir(), 'emotes'));
   serveAppScheme({
     rendererRoot: process.env.ELECTRON_RENDERER_URL ? null : join(__dirname, '../renderer'), // development pages come from Vite
-    emoteDirs: () => [library.dir],
+    emoteDirs: () => [],
   });
   if (IS_MAC) {
     app.dock?.hide(); // a menu bar app: the Dock icon only shows while settings are open
@@ -81,15 +79,13 @@ function start(): void {
   const store = new SettingsStore(settingsDir(), undefined, PLATFORM, { name: osUserName(), color: randomInt(8) });
   let settings = store.load();
   // An imported emote whose still is gone is dropped; normalising the shorter list repairs the wheel slots that used it.
-  const kept = library.present(settings.customEmotes);
-  if (kept.length !== settings.customEmotes.length) settings = store.update({ customEmotes: kept });
   // The language setting, or the system display language when it's 'auto'.
   const text = (): Strings => strings(resolveLang(settings.language, app.getLocale()), PLATFORM);
   let enabled = settings.enabledOnStart;
   let quitting = false; // read by pushStatus: once true, the tray and overlays are gone
   let capturing = false; // the settings page is listening for a key, so the helper must stay suspended
 
-  const overlays = new OverlayManager(overlaySettings(settings), (ref, remote) => resolveEmoteArt(ref, settings.customEmotes, remote));
+  const overlays = new OverlayManager(overlaySettings(settings));
   overlays.start();
   const bridge = new InputBridge({ command: helperExePath() });
 
@@ -197,7 +193,7 @@ function start(): void {
     return enabled ? 'on' : 'off';
   };
   const tray = new AppTray(
-    assetPath('textures', 'icon_ping_go_outer.png'),
+    assetPath('apexping.png'),
     {
       openSettings: () => openSettingsWindow(),
       setEnabled: (on) => setEnabled(on),
@@ -252,12 +248,7 @@ function start(): void {
   room.on('remotePing', (p) => overlays.spawnRemote(p));
   overlays.on('shared', (p: SharedPing) => {
     const shared = toShared(overlays.numbered(), p.displayId, p.x, p.y);
-    if (shared) room.sendPing(p.id, shared);
-  });
-  room.on('remoteEmote', (p) => overlays.spawnRemoteEmote(p));
-  overlays.on('sharedEmote', (p: SharedEmote) => {
-    const shared = toShared(overlays.numbered(), p.displayId, p.x, p.y);
-    if (shared) room.sendEmote(p.ref, shared);
+      if (shared) room.sendPing(p.id, shared, settings.legend);
   });
   room.on('saveCode', (code: string | null) => store.update({ lastRoomCode: code }));
   room.on('toast', (n: RoomToast) => {
@@ -283,7 +274,6 @@ function start(): void {
     version: app.getVersion(),
     problems: [
       ...store.problems,
-      ...(store.emoteKeyClashed ? [text().problemEmoteKeyClash] : []),
       ...[...overlays.missingAssets].map((a) => text().missingAsset(a)),
     ],
     limitations: text().limitations,
@@ -346,11 +336,9 @@ function start(): void {
 
   registerSettingsIpc({
     store,
-    library,
     getStatus: status,
     setEnabled,
     preview: (id) => overlays.previewPing(id),
-    previewEmote: (ref) => overlays.previewEmote(ref),
     about,
     retryHelper: startHelper,
     setCapturing: (on) => {

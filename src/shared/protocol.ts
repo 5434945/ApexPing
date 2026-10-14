@@ -50,7 +50,7 @@ export function parseHelperLine(line: string): HelperEvent | null {
         : null;
     default:
       if (typeof o.type === 'string' && POINT_TYPES.has(o.type) && isInt(o.x) && isInt(o.y)) {
-        // Anything but "emote" (including no field, from a version 1 helper) is the ping wheel.
+        if (o.wheel === 'emote') return null;
         return { type: o.type as PointType, x: o.x, y: o.y, wheel: o.wheel === 'emote' ? 'emote' : 'ping' };
       }
       return null;
@@ -83,16 +83,15 @@ export type HelperCommand =
 
 export function configCommand(s: Settings, enabled: boolean): HelperCommand {
   const t = s.trigger;
-  const e = s.emoteTrigger;
   return {
     type: 'config',
     trigger: typeof t === 'object' ? 'vk' : t,
     triggerVk: typeof t === 'object' ? t.vk : 0,
     clickPing: s.clickPing,
     gameCheck: s.gameCheck,
-    emoteTrigger: typeof e === 'object' ? 'vk' : e,
-    emoteTriggerVk: typeof e === 'object' ? e.vk : 0,
-    emoteClick: s.emoteClick,
+    emoteTrigger: 'off',
+    emoteTriggerVk: 0,
+    emoteClick: false,
     dragThresholdPx: s.dragThresholdPx,
     toggleMods: s.toggleHotkey.mods,
     toggleVk: s.toggleHotkey.vk,

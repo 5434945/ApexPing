@@ -63,7 +63,7 @@ export class SettingsStore extends EventEmitter {
       const stored: Record<string, unknown> = typeof raw === 'object' && raw !== null ? (raw as Record<string, unknown>) : {};
       if (Object.keys(this.current).some((k) => !(k in stored))) this.scheduleSave();
       // A file with no emote key (an upgrade) isn't flagged: an old Ctrl user just gets the emote key off.
-      this.emoteKeyClashed = 'emoteTrigger' in stored && stored.emoteTrigger !== 'off' && this.current.emoteTrigger === 'off';
+      if (Object.keys(stored).some((key) => !(key in this.current))) this.scheduleSave();
     } catch (err) {
       let backup = 'it was backed up to settings.bak.json';
       try {

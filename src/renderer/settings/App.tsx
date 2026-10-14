@@ -13,7 +13,7 @@ import { triggerLabel, type Settings } from '../../shared/settings';
 import type { WheelPatch } from '../../shared/wheelLayout';
 import { api } from './api';
 import { AboutSection } from './components/AboutSection';
-import { EmoteSection } from './components/EmoteSection';
+import { LegendSection } from './components/LegendSection';
 import { KeyCapture } from './components/KeyCapture';
 import { PermissionCard } from './components/PermissionCard';
 import { RoomSection } from './components/RoomSection';
@@ -36,13 +36,13 @@ const SECTIONS: { id: string; label: (t: Strings) => string; icon: ReactNode }[]
   { id: 'toggle', label: (t) => t.navToggle, icon: <Keyboard24Regular /> },
   { id: 'pings', label: (t) => t.navPings, icon: <Speaker224Regular /> },
   { id: 'wheel', label: (t) => t.navWheel, icon: <DataPie24Regular /> },
-  { id: 'emotes', label: (t) => t.navEmotes, icon: <Emoji24Regular /> },
+  { id: 'legends', label: (t) => t.lang.startsWith('zh') ? '英雄与语音' : 'Legend & Voice', icon: <PeopleCommunity24Regular /> },
   { id: 'room', label: (t) => t.navRoom, icon: <PeopleCommunity24Regular /> },
   { id: 'app', label: (t) => t.navApp, icon: <Settings24Regular /> },
 ];
 
 /** Pings that aren't in League's default wheel layout get a "new" badge. */
-const NEW_PINGS = new Set<PingId>(['bait', 'visioncleared']);
+const NEW_PINGS = new Set<PingId>();
 
 /** The settings change for a ping wheel edit: only the fields it touches, since an undefined field would reset that setting. */
 function pingPatch(p: WheelPatch<PingId>): Partial<Settings> {
@@ -70,9 +70,10 @@ export function App() {
   useEffect(() => {
     document.documentElement.dataset.platform = PLATFORM; // mac.css restyles the page for macOS
   }, []);
-  const theme = MAC ? (dark ? macDarkTheme : macLightTheme) : dark ? webDarkTheme : webLightTheme;
+  const baseTheme = MAC ? (dark ? macDarkTheme : macLightTheme) : dark ? webDarkTheme : webLightTheme;
+  const theme = { ...baseTheme, colorBrandBackground:'#ba3440', colorBrandBackgroundHover:'#a72d38', colorBrandStroke1:'#db4b57', colorBrandForeground1:dark?'#fa8087':'#ac2533' };
   return (
-    <FluentProvider theme={theme} style={{ background: 'transparent', height: '100%' }}>
+    <FluentProvider theme={theme} style={{ background: theme.colorNeutralBackground2, height: '100%' }}>
       {settings && status ? (
         <TextContext.Provider value={strings(resolveLang(settings.language, navigator.language), PLATFORM)}>
           <SettingsPage settings={settings} status={status} update={update} />
@@ -120,12 +121,12 @@ function SettingsPage({ settings: s, status, update }: { settings: Settings; sta
   return (
     <div className="app">
       <div className="titlebar">
-        <img src={textureUrl('icon_ping_go_outer')} alt="" />
+        <img src="../apexping.svg" alt="" />
         ApexPing
       </div>
       <nav className="side">
         <div className="brand">
-          <img src={textureUrl('pingwheel_basicpingrender')} alt="" />
+          <img src="../apexping.svg" alt="" />
           <div>
             <b>ApexPing</b>
             <span className="desc">{t.tagline}</span>
@@ -151,7 +152,7 @@ function SettingsPage({ settings: s, status, update }: { settings: Settings; sta
               {customTrigger ? <span className="desc">{t.customKeyNote}</span> : null}
             </>
           )}>
-          <TriggerPicker value={s.trigger} blocked={s.emoteTrigger}
+          <TriggerPicker value={s.trigger}
             onChange={(k) => { if (k !== 'off') void update({ trigger: k }); }} />
         </SettingRow>
         <SliderRow limit="dragThresholdPx" icon={<ArrowMove24Regular />} title={t.dragDistance} description={t.dragDistanceDesc}
@@ -197,8 +198,8 @@ function SettingsPage({ settings: s, status, update }: { settings: Settings; sta
           labels={{ title: t.wheelTitle, desc: t.wheelDesc(trigger), poolTitle: t.allPings, poolDesc: t.allPingsDesc }}
           onChange={(patch) => void update(pingPatch(patch))} onPreview={(id) => void api.previewPing(id)} />
 
-        <div className="section" id="emotes">{t.navEmotes}</div>
-        <EmoteSection settings={s} update={update} lengthUnit={LENGTH_UNIT} />
+        <div className="section" id="legends">{t.lang.startsWith('zh') ? '英雄与语音' : 'Legend & Voice'}</div>
+        <LegendSection settings={s} update={update} />
 
         <div className="section" id="room">{t.navRoom}</div>
         <RoomSection settings={s} update={update} />

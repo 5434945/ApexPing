@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { EmoteArt } from '../../src/shared/emotes';
 import { OVERLAY_EMOTED, OVERLAY_PINGED } from '../../src/shared/ipc';
 import { DEFAULT_SETTINGS, overlaySettings } from '../../src/shared/settings';
 
@@ -51,9 +50,6 @@ vi.mock('../../src/main/paths', () => ({
 
 type Manager = InstanceType<typeof import('../../src/main/overlayManager').OverlayManager>;
 let mgr: Manager;
-let resolveArt: ReturnType<typeof vi.fn<(ref: string, remote: boolean) => EmoteArt>>;
-
-const art = (ref: string, remote: boolean): EmoteArt => ({ kind: 'bundled', slug: `${ref}${remote ? '-remote' : ''}` });
 /** What display 1 (index 0) or display 2 (index 1) was told, minus the settings it gets on load. */
 const sent = (i: number): Array<[string, unknown]> =>
   h.windows[i].webContents.send.mock.calls.filter((c) => c[0] !== 'overlay:settings') as Array<[string, unknown]>;
@@ -63,110 +59,45 @@ beforeEach(async () => {
   h.handlers.clear();
   vi.resetModules();
   const { OverlayManager } = await import('../../src/main/overlayManager');
-  resolveArt = vi.fn(art);
-  mgr = new OverlayManager(overlaySettings({ ...DEFAULT_SETTINGS, clickEmoteId: 'okay' }), resolveArt);
+  mgr = new OverlayManager(overlaySettings(DEFAULT_SETTINGS));
   mgr.start();
 });
 
-describe('OverlayManager wheels', () => {
-  it('forwards the open wheel\'s kind with every move and the release', () => {
-    mgr.handle({ type: 'wheelOpen', x: 100, y: 200, wheel: 'emote' });
-    mgr.handle({ type: 'wheelMove', x: 110, y: 210, wheel: 'emote' });
-    mgr.handle({ type: 'wheelRelease', x: 120, y: 220, wheel: 'emote' });
-    expect(sent(0)).toEqual([
-      ['wheel:open', { x: 100, y: 200, wheel: 'emote' }],
-      ['wheel:move', { x: 110, y: 210, wheel: 'emote' }],
-      ['wheel:release', { x: 120, y: 220, wheel: 'emote' }],
-    ]);
-  });
-
-  it('keeps the ping wheel a ping wheel after an emote one', () => {
-    mgr.handle({ type: 'wheelOpen', x: 1, y: 1, wheel: 'emote' });
-    mgr.handle({ type: 'wheelRelease', x: 1, y: 1, wheel: 'emote' });
-    mgr.handle({ type: 'wheelOpen', x: 5, y: 5, wheel: 'ping' });
-    mgr.handle({ type: 'wheelMove', x: 6, y: 6, wheel: 'ping' });
-    expect(sent(0).slice(2)).toEqual([
-      ['wheel:open', { x: 5, y: 5, wheel: 'ping' }],
-      ['wheel:move', { x: 6, y: 6, wheel: 'ping' }],
-    ]);
-  });
-});
-
-describe('OverlayManager emote clicks', () => {
-  it('shows the click emote where it was clicked, clears ours on the other displays and shares it', () => {
-    const shared = vi.fn();
-    mgr.on('sharedEmote', shared);
-    mgr.on('shared', shared);
-    mgr.handle({ type: 'click', x: 1920 + 300, y: 400, wheel: 'emote' });
-    expect(sent(1)).toEqual([['emote:spawn', { owner: 'self', art: art('okay', false), x: 300, y: 400 }]]);
-    expect(sent(0)).toEqual([['emote:clear', { owner: 'self' }]]);
-    expect(resolveArt).toHaveBeenCalledWith('okay', false);
-    expect(shared).toHaveBeenCalledOnce();
-    expect(shared).toHaveBeenCalledWith({ ref: 'okay', displayId: 2, x: 300, y: 400 });
-  });
-
-  it('still drops the click ping for a ping click', () => {
-    const emoted = vi.fn();
-    const pinged = vi.fn();
-    mgr.on('sharedEmote', emoted);
-    mgr.on('shared', pinged);
-    mgr.handle({ type: 'click', x: 50, y: 60, wheel: 'ping' });
-    expect(sent(0)).toEqual([['ping:spawn', { id: DEFAULT_SETTINGS.clickPingId, x: 50, y: 60 }]]);
-    expect(sent(1)).toEqual([]);
-    expect(emoted).not.toHaveBeenCalled();
-    expect(pinged).toHaveBeenCalledOnce();
-  });
-});
-
-describe('OverlayManager emote reports from the overlay', () => {
-  const sender = (i: number): unknown => h.windows[i].webContents;
-
-  it('shares a wheel emote from the display that placed it and clears ours elsewhere', () => {
-    const shared = vi.fn();
-    mgr.on('sharedEmote', shared);
-    h.handlers.get(OVERLAY_EMOTED)!({ sender: sender(1) }, { ref: 'c:' + 'a'.repeat(32), x: 10, y: 20 });
-    expect(shared).toHaveBeenCalledWith({ ref: 'c:' + 'a'.repeat(32), displayId: 2, x: 10, y: 20 });
-    expect(sent(0)).toEqual([['emote:clear', { owner: 'self' }]]);
-    expect(sent(1)).toEqual([]);
-  });
-
-  it('ignores a malformed report', () => {
-    const shared = vi.fn();
-    mgr.on('sharedEmote', shared);
-    const report = h.handlers.get(OVERLAY_EMOTED)!;
-    for (const raw of [
-      null, 'x', 5, {}, { ref: 'Bad Ref', x: 1, y: 1 }, { ref: 'c:abc', x: 1, y: 1 }, { ref: 'okay', x: Number.NaN, y: 1 },
-      { ref: 'okay', x: 1, y: Infinity }, { ref: 'okay', x: '1', y: 1 }, { ref: 7, x: 1, y: 1 },
-    ]) report({ sender: sender(0) }, raw);
-    report({ sender: {} }, { ref: 'okay', x: 1, y: 1 }); // not one of our windows
-    expect(shared).not.toHaveBeenCalled();
+describe('Apex ping overlay', () => {
+  it('rejects every legacy emote gesture and registers no emote IPC', () => {
+    for (const type of ['wheelOpen','wheelMove','wheelRelease','click'] as const)
+      mgr.handle({ type, wheel: 'emote', x: 10, y: 10 });
     expect(sent(0)).toEqual([]);
     expect(sent(1)).toEqual([]);
+    expect(h.handlers.has(OVERLAY_EMOTED)).toBe(false);
   });
-
-  it('still shares pings', () => {
-    const shared = vi.fn();
-    mgr.on('shared', shared);
-    h.handlers.get(OVERLAY_PINGED)!({ sender: sender(0) }, { id: 'danger', x: 1, y: 2 });
-    expect(shared).toHaveBeenCalledWith({ id: 'danger', displayId: 1, x: 1, y: 2 });
+  it('opens, moves and releases the ping wheel', () => {
+    for (const type of ['wheelOpen','wheelMove','wheelRelease'] as const)
+      mgr.handle({ type, wheel: 'ping', x: 10, y: 20 });
+    expect(sent(0).map(([channel]) => channel)).toEqual(['wheel:open','wheel:move','wheel:release']);
   });
-});
-
-describe('OverlayManager remote and preview emotes', () => {
-  it('shows a room member\'s emote on the target display with their tag, and clears theirs on the others', () => {
-    mgr.spawnRemoteEmote({ displayId: 2, x: 5, y: 6, ref: 'gg_heart', peer: 'peer-1', tag: { name: 'Bob', color: 2 } });
-    expect(resolveArt).toHaveBeenCalledWith('gg_heart', true);
-    expect(sent(1)).toEqual([['emote:spawn', { owner: 'peer-1', art: art('gg_heart', true), x: 5, y: 6, tag: { name: 'Bob', color: 2 } }]]);
-    expect(sent(0)).toEqual([['emote:clear', { owner: 'peer-1' }]]);
+  it('shares click pings on the correct display', () => {
+    const shared = vi.fn(); mgr.on('shared', shared);
+    mgr.handle({ type: 'click', wheel: 'ping', x: 2000, y: 40 });
+    expect(sent(1)).toEqual([['ping:spawn', { id: 'generic', x: 80, y: 40 }]]);
+    expect(shared).toHaveBeenCalledWith({ id: 'generic', displayId: 2, x: 80, y: 40 });
   });
-
-  it('previews in the middle of the main display without sharing', () => {
-    const shared = vi.fn();
-    mgr.on('sharedEmote', shared);
-    mgr.previewEmote('nice');
-    expect(resolveArt).toHaveBeenCalledWith('nice', false);
-    expect(sent(0)).toEqual([['emote:spawn', { owner: 'preview', art: art('nice', false), x: 960, y: 540 }]]);
-    expect(sent(1)).toEqual([]);
+  it('forwards the remote hero identity without replacing it with ours', () => {
+    mgr.spawnRemote({ displayId: 2, x: 5, y: 6, id: 'danger', legend: 'mirage', tag: {name:'Bob',color:2} });
+    expect(sent(1)[0][1]).toMatchObject({ legend:'mirage', id:'danger' });
+  });
+  it('previews without sharing', () => {
+    const shared = vi.fn(); mgr.on('shared', shared);
+    mgr.previewPing('danger');
+    expect(sent(0)).toEqual([['ping:spawn',{id:'danger',x:960,y:540}]]);
     expect(shared).not.toHaveBeenCalled();
+  });
+  it('shares only valid reports from its own windows', () => {
+    const shared = vi.fn(); mgr.on('shared', shared);
+    const report = h.handlers.get(OVERLAY_PINGED)!;
+    report({sender:h.windows[0].webContents},{id:'danger',x:1,y:2});
+    report({sender:{}},{id:'danger',x:1,y:2});
+    report({sender:h.windows[0].webContents},{id:'nope',x:1,y:2});
+    expect(shared).toHaveBeenCalledExactlyOnceWith({id:'danger',displayId:1,x:1,y:2});
   });
 });

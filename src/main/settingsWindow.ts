@@ -86,7 +86,7 @@ export function openSettingsWindow(section?: string): BrowserWindow {
     minWidth: 720,
     minHeight: 520,
     title: 'ApexPing',
-    icon: nativeImage.createFromPath(assetPath('textures', 'icon_ping_go_outer.png')),
+    icon: nativeImage.createFromPath(assetPath('apexping.png')),
     show: false,
     ...chromeOptions(),
     webPreferences: { preload: preloadPath('settings'), spellcheck: false },
