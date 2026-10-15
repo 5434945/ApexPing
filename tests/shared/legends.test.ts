@@ -26,6 +26,7 @@ describe('legend settings and migration', () => {
   });
   it('migrates only the old default wheel, preserving custom layouts', () => {
     expect(normalizeSettings({wheel:['generic','danger','bait','omw','push','visioncleared','needvision','missing']}).wheel).toEqual(DEFAULT_WHEEL);
+    expect(normalizeSettings({wheel:['enemyvision','audio','bait','push','assist','visioncleared','needvision','missing']}).wheel).toEqual(DEFAULT_WHEEL);
     const custom=[...DEFAULT_WHEEL].reverse();
     expect(normalizeSettings({wheel:custom}).wheel).toEqual(custom);
   });
@@ -46,7 +47,7 @@ describe('bilingual original voice matrix', () => {
         expect(existsSync(file),file).toBe(true);
         const bytes=readFileSync(file);
         expect(bytes.length).toBeGreaterThan(1000);
-        expect(bytes.subarray(0,4).toString()).toBe('RIFF');
+        expect(bytes.subarray(0,4).toString()).toBe('OggS');
         const hash=createHash('sha256').update(bytes).digest('hex');
         expect(hash).toBe(item.sha256);
         hashes.push(hash);
@@ -54,4 +55,26 @@ describe('bilingual original voice matrix', () => {
       expect(hashes[0]).not.toBe(hashes[1]);
     }
   });
+  it('indexes complete, correctly bound OGG variants without mixed heroes or languages', () => {
+    const manifest=JSON.parse(readFileSync(resolve(assets,'voice-manifest.json'),'utf8'));
+    const index=JSON.parse(readFileSync(resolve(assets,'voice-index.json'),'utf8'));
+    const verified=new Set<string>();
+    const actions: Record<string,string>={danger:'spotEnemy',generic:'spotDefault',omw:'exploreGoPlayer',push:'attackHere',allin:'attackHere',assist:'regroupHere',needvision:'watchingHere',missing:'cluePresence',enemyvision:'avoidHere',bait:'lootingHere',visioncleared:'defendHere',audio:'hearEnemy'};
+    for(const [hero] of LEGENDS) for(const lang of ['en','zh-CN']) for(const ping of ALL_PINGS){
+      const variants=manifest.voices[`${lang}/${hero}`][ping.id].variants;
+      expect(variants.length).toBeGreaterThan(0);
+      expect(index[`${lang}/${hero}/${ping.id}`]).toEqual(variants.map((v:{file:string})=>v.file));
+      for(const v of variants){
+        expect(v.sourceName).toMatch(new RegExp(`^diag_mp_${hero}_ping_${actions[ping.id]}_(calm|calmFar|urgent)_\\d+_\\d+_1p$`,'i'));
+        expect(v.sourceStream).toBe(lang==='en'?'general_english.mstr':'general_mandarin.mstr');
+        expect(v.file.startsWith(`voices/${lang}/${hero}/variants/`)).toBe(true);
+        if(verified.has(v.file))continue;
+        const bytes=readFileSync(resolve(assets,v.file));
+        expect(bytes.subarray(0,4).toString()).toBe('OggS');
+        expect(createHash('sha256').update(bytes).digest('hex')).toBe(v.sha256);
+        verified.add(v.file);
+      }
+    }
+    expect(verified.size).toBeGreaterThan(672);
+  },60000);
 });

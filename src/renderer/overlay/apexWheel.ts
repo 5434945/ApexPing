@@ -10,11 +10,17 @@ function sector(i: number): string {
   const p = [point(WHEEL.innerR, a), point(WHEEL.outerR, a), point(WHEEL.outerR, b), point(WHEEL.innerR, b)];
   return `M${p[0]}L${p[1]}A${WHEEL.outerR},${WHEEL.outerR} 0 0 1 ${p[2]}L${p[3]}A${WHEEL.innerR},${WHEEL.innerR} 0 0 0 ${p[0]}Z`;
 }
+function arc(i: number, radius: number): string {
+  const a = (i * 45 - 112.5) * Math.PI / 180;
+  return `M${point(radius, a)}A${radius},${radius} 0 0 1 ${point(radius, a + Math.PI / 4)}`;
+}
 
 export class ApexWheel {
   private items: readonly WheelItem[] = [];
   private wedges: SVGPathElement[] = [];
   private icons: SVGImageElement[] = [];
+  private accent: SVGPathElement;
+  private highlight: SVGPathElement;
   private label: SVGTextElement;
   private hot = -1;
   private x = 0;
@@ -28,23 +34,29 @@ export class ApexWheel {
       svg.append(el);
       return el;
     };
-    add('circle', { r: WHEEL.innerR - 4, fill: '#101214', 'fill-opacity': '.76', stroke: '#ffffff66', 'stroke-width': 1 });
+    add('circle', { r: WHEEL.innerR, fill: '#555550', 'fill-opacity': '.2', stroke: '#ffffff70', 'stroke-width': 1.4 });
     for (let i = 0; i < 8; i++) {
-      this.wedges.push(add('path', { d: sector(i), fill: '#171a1d', 'fill-opacity': '.88', stroke: '#c9cccf66', 'stroke-width': 1.3 }));
-      const [x, y] = point(WHEEL.iconR, (i * 45 - 90) * Math.PI / 180);
-      this.icons.push(add('image', { x: x - 25, y: y - 25, width: 50, height: 50, class: 'apex-wheel-icon' }));
+      this.wedges.push(add('path', { d: sector(i), fill: '#66665f', 'fill-opacity': '.28', class: 'apex-sector' }));
+      const a = (i * 45 - 112.5) * Math.PI / 180;
+      add('path', { d: `M${point(WHEEL.innerR, a)}L${point(WHEEL.outerR, a)}`, stroke: '#ffffff30', 'stroke-width': 1, fill: 'none' });
+      const [x, y] = point(WHEEL.outerR * .8, (i * 45 - 90) * Math.PI / 180);
+      this.icons.push(add('image', { x: x - 22, y: y - 22, width: 44, height: 44, class: 'apex-wheel-icon' }));
     }
-    this.label = add('text', { x: 0, y: -3, 'text-anchor': 'middle', class: 'apex-center' });
+    this.accent = add('path', { fill: 'none', stroke: '#ff962b', 'stroke-width': 6, class: 'apex-selection-arc', opacity: 0 });
+    this.highlight = add('path', { fill: 'none', stroke: '#fff', 'stroke-width': 2, opacity: 0 });
+    this.label = add('text', { x: 0, y: -WHEEL.innerR * .48, 'text-anchor': 'middle', class: 'apex-center' });
     this.label.textContent = '标记';
-    add('text', { x: 0, y: 27, 'text-anchor': 'middle', class: 'apex-back' }).textContent = '取消';
+    add('text', { x: 0, y: WHEEL.innerR * .72, 'text-anchor': 'middle', class: 'apex-back' }).textContent = '返回';
   }
 
   get isOpen(): boolean { return this.opened; }
   setItems(items: readonly WheelItem[]): void {
     this.items = items;
     this.icons.forEach((icon, i) => {
-      icon.setAttribute('href', items[i]?.icon ?? '');
-      icon.classList.toggle('hostile', ['danger','audio','push','allin','missing'].includes(items[i]?.key));
+      const key = items[i]?.key;
+      const referenceIcon = ['generic','danger','bait','push','omw','visioncleared','needvision','missing'].includes(key);
+      icon.setAttribute('href', referenceIcon ? `../wheel/${key}.svg` : items[i]?.icon ?? '');
+      icon.classList.toggle('hostile', ['danger','audio','missing'].includes(items[i]?.key));
     });
   }
   open(x: number, y: number): void {
@@ -66,10 +78,16 @@ export class ApexWheel {
     const changed = index !== this.hot;
     this.hot = index;
     this.wedges.forEach((w, i) => {
-      w.setAttribute('fill', i === index ? '#f2aa42' : '#171a1d');
-      w.setAttribute('fill-opacity', i === index ? '.96' : '.88');
+      w.setAttribute('fill', i === index ? '#373733' : '#66665f');
+      w.setAttribute('fill-opacity', i === index ? '.43' : '.28');
       this.icons[i].classList.toggle('selected', i === index);
     });
+    this.accent.setAttribute('opacity', index >= 0 ? '1' : '0');
+    this.highlight.setAttribute('opacity', index >= 0 ? '1' : '0');
+    if (index >= 0) {
+      this.accent.setAttribute('d', arc(index, WHEEL.innerR + 5));
+      this.highlight.setAttribute('d', arc(index, WHEEL.innerR));
+    }
     this.label.textContent = index >= 0 ? pingById(this.items[index]?.key)?.name ?? '标记' : '标记';
     if (changed && index >= 0 && this.opened) this.onHover(index);
   }

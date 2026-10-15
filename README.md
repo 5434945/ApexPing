@@ -1,10 +1,10 @@
 # ApexPing
 
-Windows 桌面 Apex 风格标记轮盘，基于 [darrenprx/lolPing](https://github.com/darrenprx/lolPing) 改造。当前版本：0.2.0 测试版。
+Windows 桌面 Apex 风格标记轮盘，基于 [darrenprx/lolPing](https://github.com/darrenprx/lolPing) 改造。当前版本：0.3.0 测试版。
 
 这是独立桌面覆盖层，不注入游戏进程，不向 Apex 游戏内发送标记。
 
-[下载 Windows 便携版](https://github.com/5434945/ApexPing/releases/tag/v0.2.0) · [本次更新说明](CHANGELOG.md)
+[下载 Windows 便携版](https://github.com/5434945/ApexPing/releases/tag/v0.3.0) · [本次更新说明](CHANGELOG.md)
 
 ## 操作
 
@@ -16,9 +16,9 @@ Windows 桌面 Apex 风格标记轮盘，基于 [darrenprx/lolPing](https://gith
 
 ## 当前实现
 
-- 按官方 Arsenal 参考图调整八方向轮盘，加入敌人声音、避开区域和集合；桌面标记不再显示下方文字。
+- 默认八方向轮盘按用户提供的游戏截图还原，采用半透明灰色扇区、橙白选中弧线和中央名称；敌人声音、避开区域和集合仍可配置。桌面标记不显示下方文字。
 - 使用本机 Apex 游戏文件中的原版图标和提示音源；映射记录在 `assets/apex-provenance.json`。
-- 全部 28 位英雄，普通话 / 英语切换，语音音量独立设置。12 个标记项共 672 个语音文件，逐条来源及 SHA-256 见 `assets/voice-manifest.json`。
+- 全部 28 位英雄，普通话 / 英语切换，语音音量独立设置。12 个标记项、672 个英雄/语言/动作组合，共 13,637 条有效语音变体；打乱播放且避免连续重复。逐条来源及 SHA-256 见 `assets/voice-manifest.json`。
 - 动画为桌面端重现，不是游戏动画逐帧复制；通用提示音使用原版源片段，尚未复刻完整游戏事件混音。
 - 删除表情入口、设置、导入、播放模块及打包素材；旧表情消息会被拒绝。
 - 房间标记携带发送方英雄身份，接收方选择听中文或英文。旧客户端无英雄身份时不猜测角色、不播放错误角色语音。

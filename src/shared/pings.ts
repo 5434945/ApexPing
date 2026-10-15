@@ -21,7 +21,7 @@ export interface PingDef {
 
 const names: Record<PingId, string> = {
   danger: '发现敌人', push: '进攻这里', omw: '我要去这里', allin: '一起进攻', assist: '在这里集合',
-  needvision: '观察这里', missing: '有人来过', enemyvision: '避开这里', generic: '前往这里',
+  needvision: '观察这里', missing: '有人来过这里', enemyvision: '避开这里', generic: '前往这里',
   bait: '搜索物资', visioncleared: '防守这里',
   audio: '听到敌人',
 };
@@ -30,10 +30,10 @@ export const ALL_PINGS: readonly PingDef[] = (Object.keys(names) as PingId[]).ma
   id, name: names[id], icon: basename(apex[id].outerIcon), art: [basename(apex[id].outerIcon)],
   inner: basename(apex[id].innerIcon), pulse: basename(apex[id].animIcon),
   sound: id === 'danger' ? 'apex_enemy' : 'apex_location',
-  color: ['danger', 'audio', 'push', 'allin', 'missing'].includes(id) ? '#ff4747' : '#f3ae4b',
+  color: ['danger', 'audio', 'missing'].includes(id) ? '#ff4b28' : '#f5b632',
 }));
-// EA's Arsenal wheel, top then clockwise. Direct location/enemy pings remain available in the editor.
-export const DEFAULT_WHEEL: readonly PingId[] = ['enemyvision', 'audio', 'bait', 'push', 'assist', 'visioncleared', 'needvision', 'missing'];
+// User's in-game reference: top then clockwise. Other pings remain available in the editor.
+export const DEFAULT_WHEEL: readonly PingId[] = ['generic', 'danger', 'bait', 'push', 'omw', 'visioncleared', 'needvision', 'missing'];
 export const DEFAULT_CLICK_PING: PingId = 'generic';
 export const WHEEL_SLOTS = 8;
 

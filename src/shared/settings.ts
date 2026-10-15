@@ -177,7 +177,10 @@ export function normalizeSettings(raw: unknown, platform: Platform = 'win', iden
     clickPing: bool(r.clickPing, 'clickPing'),
     gameCheck: bool(r.gameCheck, 'gameCheck'),
     clickPingId: isPingId(r.clickPingId) ? r.clickPingId : DEFAULT_CLICK_PING,
-    wheel: isValidWheel(r.wheel) && JSON.stringify(r.wheel) !== JSON.stringify(['generic','danger','bait','omw','push','visioncleared','needvision','missing']) ? [...r.wheel] : [...DEFAULT_WHEEL],
+    wheel: isValidWheel(r.wheel) && ![
+      ['generic','danger','bait','omw','push','visioncleared','needvision','missing'],
+      ['enemyvision','audio','bait','push','assist','visioncleared','needvision','missing'],
+    ].some((old) => JSON.stringify(r.wheel) === JSON.stringify(old)) ? [...r.wheel] : [...DEFAULT_WHEEL],
     toggleHotkey,
     pingSizePx: num(r.pingSizePx, 'pingSizePx'),
     pingDurationS: num(r.pingDurationS, 'pingDurationS'),

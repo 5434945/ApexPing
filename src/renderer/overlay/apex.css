@@ -1,8 +1,9 @@
-#wheel { filter: drop-shadow(0 3px 12px #0006); }
+#wheel { filter: drop-shadow(0 1px 2px #0003); }
 #wheel .apex-wheel-icon { filter: brightness(0) saturate(100%) invert(75%) sepia(88%) saturate(1443%) hue-rotate(338deg) brightness(103%); opacity: .98; }
 #wheel .apex-wheel-icon.hostile { filter: brightness(0) saturate(100%) invert(35%) sepia(100%) saturate(2443%) hue-rotate(340deg) brightness(108%); }
-#wheel .apex-wheel-icon.selected { filter: brightness(0); }
-.apex-center { font: 600 18px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: white; letter-spacing: 0; }
+#wheel .apex-wheel-icon.selected { opacity: 1; }
+.apex-sector { transition: fill .08s linear, fill-opacity .08s linear; }
+.apex-center { font: 600 16px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: white; letter-spacing: 0; paint-order: stroke; stroke: #0005; stroke-width: 2px; }
 .apex-back { font: 12px 'Segoe UI', 'Microsoft YaHei', sans-serif; fill: #bcbfc2; letter-spacing: 0; }
 .apex-ping { animation: apex-life var(--dur) linear forwards; }
 .apex-ping .art { top: calc(var(--size) * -.88); animation: none; }
