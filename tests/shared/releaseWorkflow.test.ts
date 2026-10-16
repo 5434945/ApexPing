@@ -2,9 +2,10 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-// The release workflow cannot run here, so these checks keep its ordering from regressing: installed apps read latest.yml from the
-// newest *published* release, so the release has to stay a draft until both installers and the update files are uploaded.
+// New releases stay in draft until both platform artifacts are uploaded.
 const workflow = readFileSync(join(__dirname, '../../.github/workflows/release.yml'), 'utf8').replace(/\r\n/g, '\n');
+const pkg = JSON.parse(readFileSync(join(__dirname, '../../package.json'), 'utf8'));
+const ci = readFileSync(join(__dirname, '../../.github/workflows/ci.yml'), 'utf8');
 
 /** The text of one top-level job. */
 function job(name: string): string {
@@ -22,13 +23,34 @@ describe('release workflow', () => {
     expect(create).toMatch(/grep -Fx "\$GITHUB_REF_NAME" > \/dev\/null/); // not -q: grep reads the whole list, so gh never gets a broken pipe
   });
 
-  it('uploads the installer, latest.yml and the blockmap from the Windows job, and the disk image from the Mac job', () => {
+  it('uploads the configured artifacts without requiring disabled update metadata', () => {
     const win = job('windows');
-    expect(win).toContain('"release/lolPing-Setup-${GITHUB_REF_NAME#v}.exe"');
-    expect(win).toContain('"release/latest.yml"');
-    expect(win).toContain('"release/lolPing-Setup-${GITHUB_REF_NAME#v}.exe.blockmap"');
+    const installer = pkg.build.nsis.artifactName.replace('${version}', '${GITHUB_REF_NAME#v}');
+    const dmg = pkg.build.dmg.artifactName.replace('${version}', '${GITHUB_REF_NAME#v}');
+    expect(win).toContain(`"release/${installer}"`);
+    expect(pkg.build.publish).toBeNull();
+    expect(win).not.toContain('"release/latest.yml"');
+    expect(win).toContain(`"release/${installer}.blockmap"`);
     expect(win).toContain('--clobber');
-    expect(job('mac')).toContain('release/lolPing-${GITHUB_REF_NAME#v}-arm64.dmg');
+    expect(job('mac')).toContain(`release/${dmg}`);
+  });
+
+  it('checks the configured Mac app name in both workflows', () => {
+    const app = `release/mac-arm64/${pkg.build.productName}.app`;
+    expect(job('mac')).toContain(app);
+    expect(ci).toContain(app);
+  });
+
+  it('manual validation builds artifacts without modifying releases', () => {
+    expect(workflow).toContain('workflow_dispatch:');
+    expect(job('release')).toMatch(/name: Create the release\n\s+if: github.event_name == 'push'/);
+    expect(job('publish')).toContain("if: github.event_name == 'push'");
+    for (const name of ['windows', 'mac']) {
+      const text = job(name);
+      expect(text).toMatch(/name: Upload[^\n]*\n\s+if: github.event_name == 'push'/);
+      expect(text).toMatch(/uses: actions\/upload-artifact@v4\n\s+if: github.event_name == 'workflow_dispatch'/);
+      expect(text).toContain('if-no-files-found: error');
+    }
   });
 
   it('publishes the draft in a last job that waits for both platform jobs', () => {
