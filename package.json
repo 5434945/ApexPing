@@ -1,7 +1,7 @@
 {
   "name": "apexping",
   "productName": "ApexPing",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": true,
   "description": "Apex-style desktop ping wheel, based on lolPing",
   "author": "Danrui Meng (https://github.com/darrenprx)",

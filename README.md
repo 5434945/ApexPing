@@ -1,10 +1,10 @@
 # ApexPing
 
-Windows 桌面 Apex 风格标记轮盘，基于 [darrenprx/lolPing](https://github.com/darrenprx/lolPing) 改造。当前版本：0.3.0 测试版。
+Windows 桌面 Apex 风格标记轮盘，基于 [darrenprx/lolPing](https://github.com/darrenprx/lolPing) 改造。当前版本：0.3.1 测试版。
 
 这是独立桌面覆盖层，不注入游戏进程，不向 Apex 游戏内发送标记。
 
-[下载 Windows 便携版](https://github.com/5434945/ApexPing/releases/tag/v0.3.0) · [本次更新说明](CHANGELOG.md)
+[下载 Windows 便携版](https://github.com/5434945/ApexPing/releases/tag/v0.3.1) · [本次更新说明](CHANGELOG.md)
 
 ## 操作
 

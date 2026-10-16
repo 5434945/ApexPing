@@ -12,6 +12,7 @@ export function LegendSection({ settings: s, update }: { settings: Settings; upd
   return <>
     <SettingRow icon={<Person24Regular />} title={zh ? '英雄' : 'Legend'}>
       <Dropdown aria-label={zh ? '英雄' : 'Legend'} value={legendName(s.legend, zh)} selectedOptions={[s.legend]}
+        listbox={{ className: 'legend-listbox' }}
         onOptionSelect={(_, d) => { if (d.optionValue) void update({ legend: d.optionValue as LegendId }); }}>
         {LEGENDS.map(([id]) => <Option key={id} value={id}>{legendName(id, zh)}</Option>)}
       </Dropdown>

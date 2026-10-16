@@ -7,6 +7,10 @@ body { font-family: "Segoe UI Variable Text", "Segoe UI", sans-serif; overflow: 
 .app { display: grid; grid-template-rows: 40px 1fr; grid-template-columns: 240px 1fr; height: 100%; }
 .titlebar { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; padding-left: 16px; font-size: 12px; -webkit-app-region: drag; }
 .titlebar img { width: 16px; height: 16px; }
+/* Portaled options must remain clickable even where they overlap a draggable caption. */
+[role="listbox"], [role="option"] { -webkit-app-region: no-drag; }
+/* Fluent positioning writes an inline max-height; cap it for this long menu. */
+[role="listbox"].legend-listbox { max-height: min(320px, calc(100vh - 96px)) !important; overflow-y: auto; overscroll-behavior: contain; }
 nav.side { padding: 4px 8px; display: flex; flex-direction: column; gap: 3px; }
 .brand { display: flex; align-items: center; gap: 12px; padding: 8px 10px 16px; }
 .brand img { width: 40px; height: 40px; }
