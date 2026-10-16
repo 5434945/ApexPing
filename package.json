@@ -116,7 +116,7 @@
       }
     },
     "dmg": {
-      "artifactName": "lolPing-${version}-arm64.dmg"
+      "artifactName": "ApexPing-${version}-arm64.dmg"
     },
     "publish": null,
     "portable": {

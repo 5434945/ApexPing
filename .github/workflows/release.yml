@@ -2,6 +2,7 @@ name: Release
 
 # Push a tag that matches package.json's version (for example v0.2.0) to build both installers and publish them.
 on:
+  workflow_dispatch:
   push:
     tags: ['v*']
 
@@ -14,16 +15,17 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Check the tag matches package.json
+        if: github.event_name == 'push'
         run: test "v$(node -p "require('./package.json').version")" = "$GITHUB_REF_NAME"
-      # A draft: installed apps look for latest.yml in the newest published release, so it must not show up before the Windows job has
-      # uploaded it (every check would fail with "Cannot find latest.yml" meanwhile). The publish job at the end makes it public.
+      # Keep new releases in draft until both platform artifacts are uploaded.
       # A draft is not found by `gh release view`, so look for the tag in the list. A re-run keeps the release it already has.
       - name: Create the release
+        if: github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release list --limit 200 --json tagName --jq '.[].tagName' | grep -Fx "$GITHUB_REF_NAME" > /dev/null \
-            || gh release create "$GITHUB_REF_NAME" --title "lolPing $GITHUB_REF_NAME" --generate-notes --draft
+            || gh release create "$GITHUB_REF_NAME" --title "ApexPing $GITHUB_REF_NAME" --generate-notes --draft
 
   windows:
     needs: release
@@ -40,16 +42,31 @@ jobs:
       - run: npm run test:helper
       - run: npm test
       - run: npm run dist
-      - name: Upload the installer and its update files
+      - name: Check Windows artifacts
+        shell: bash
+        run: |
+          version=$(node -p "require('./package.json').version")
+          test -s "release/ApexPing-Setup-${version}.exe"
+          test -s "release/ApexPing-Setup-${version}.exe.blockmap"
+      - uses: actions/upload-artifact@v4
+        if: github.event_name == 'workflow_dispatch'
+        with:
+          name: ApexPing-windows-validation
+          path: |
+            release/ApexPing-Setup-*.exe
+            release/ApexPing-Setup-*.exe.blockmap
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload the installer and blockmap
+        if: github.event_name == 'push'
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-        # latest.yml and the blockmap are what electron-updater in an installed lolPing reads to find and fetch this version.
+        # publish:null disables update metadata generation; do not require latest.yml.
         run: |
           gh release upload "$GITHUB_REF_NAME" \
-            "release/lolPing-Setup-${GITHUB_REF_NAME#v}.exe" \
-            "release/latest.yml" \
-            "release/lolPing-Setup-${GITHUB_REF_NAME#v}.exe.blockmap" \
+            "release/ApexPing-Setup-${GITHUB_REF_NAME#v}.exe" \
+            "release/ApexPing-Setup-${GITHUB_REF_NAME#v}.exe.blockmap" \
             --clobber
 
   mac:
@@ -67,14 +84,23 @@ jobs:
       - run: npm run test:helper
       - run: npm test
       - run: npm run dist:mac
-      - run: codesign --verify --deep --strict "release/mac-arm64/lolPing.app"
+      - run: codesign --verify --deep --strict "release/mac-arm64/ApexPing.app"
+      - uses: actions/upload-artifact@v4
+        if: github.event_name == 'workflow_dispatch'
+        with:
+          name: ApexPing-mac-validation
+          path: release/*.dmg
+          if-no-files-found: error
+          retention-days: 7
       - name: Upload the disk image
+        if: github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "$GITHUB_REF_NAME" "release/lolPing-${GITHUB_REF_NAME#v}-arm64.dmg" --clobber
+        run: gh release upload "$GITHUB_REF_NAME" "release/ApexPing-${GITHUB_REF_NAME#v}-arm64.dmg" --clobber
 
-  # Both installers and the update files are uploaded: only now does the draft become the latest release.
+  # Manual runs validate builds without changing existing releases.
   publish:
+    if: github.event_name == 'push'
     needs: [windows, mac]
     runs-on: ubuntu-latest
     steps:
