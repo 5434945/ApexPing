@@ -52,7 +52,6 @@
   "build": {
     "appId": "com.apexping.app",
     "productName": "ApexPing",
-    "asarUnpack": ["out/renderer/voices/**/*"],
     "directories": {
       "output": "release",
       "buildResources": "build"
@@ -62,6 +61,7 @@
       "package.json"
     ],
     "win": {
+      "asarUnpack": ["out/renderer/voices/**/*"],
       "target": [
         {
           "target": "nsis",

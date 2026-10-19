@@ -29,6 +29,8 @@ describe('release workflow', () => {
     const dmg = pkg.build.dmg.artifactName.replace('${version}', '${GITHUB_REF_NAME#v}');
     expect(win).toContain(`"release/${installer}"`);
     expect(pkg.build.publish).toBeNull();
+    expect(pkg.build.asarUnpack).toBeUndefined();
+    expect(pkg.build.win.asarUnpack).toContain('out/renderer/voices/**/*');
     expect(win).not.toContain('"release/latest.yml"');
     expect(win).toContain(`"release/${installer}.blockmap"`);
     expect(win).toContain('--clobber');

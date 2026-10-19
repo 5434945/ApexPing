@@ -341,7 +341,7 @@ function start(): void {
     getStatus: status,
     setEnabled,
     preview: (id) => overlays.previewPing(id),
-    voicePacks: new VoicePacks(join(settingsDir(),'voice-packs'), app.isPackaged
+    voicePacks: new VoicePacks(join(settingsDir(),'voice-packs'), app.isPackaged && !IS_MAC
       ? join(process.resourcesPath,'app.asar.unpacked/out/renderer/voices') : assetPath('voices')),
     about,
     retryHelper: startHelper,
