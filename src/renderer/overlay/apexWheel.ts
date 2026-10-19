@@ -1,4 +1,5 @@
-import { pickSlice, WHEEL } from '../../shared/geometry';
+import { pickStableSlice, wheelPlacement, WHEEL } from '../../shared/geometry';
+import { DEFAULT_SETTINGS, type OverlaySettings } from '../../shared/settings';
 import { pingById } from '../../shared/pings';
 import type { WheelItem } from './wheel';
 
@@ -26,6 +27,9 @@ export class ApexWheel {
   private x = 0;
   private y = 0;
   private opened = false;
+  private settings = DEFAULT_SETTINGS;
+  private scale = 1;
+  private cancelRing: SVGCircleElement;
 
   constructor(private svg: SVGSVGElement, private onHover: (slice: number) => void) {
     const add = <K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string, string | number>): SVGElementTagNameMap[K] => {
@@ -35,6 +39,7 @@ export class ApexWheel {
       return el;
     };
     add('circle', { r: WHEEL.innerR, fill: '#555550', 'fill-opacity': '.2', stroke: '#ffffff70', 'stroke-width': 1.4 });
+    this.cancelRing=add('circle',{r:WHEEL.innerR,fill:'none',stroke:'#ffffff80','stroke-width':1,'stroke-dasharray':'3 4',opacity:0});
     for (let i = 0; i < 8; i++) {
       this.wedges.push(add('path', { d: sector(i), fill: '#66665f', 'fill-opacity': '.28', class: 'apex-sector' }));
       const a = (i * 45 - 112.5) * Math.PI / 180;
@@ -50,6 +55,12 @@ export class ApexWheel {
   }
 
   get isOpen(): boolean { return this.opened; }
+  configure(settings: Pick<OverlaySettings, 'wheelScale' | 'wheelOpacity' | 'wheelDeadZone' | 'wheelHysteresis'>): void {
+    this.settings = { ...this.settings, ...settings };
+    this.cancelRing.setAttribute('r',String(settings.wheelDeadZone));
+    this.cancelRing.setAttribute('opacity',settings.wheelDeadZone===WHEEL.innerR?'0':'.7');
+    this.svg.style.setProperty('--wheel-opacity', String(settings.wheelOpacity / 100));
+  }
   setItems(items: readonly WheelItem[]): void {
     this.items = items;
     this.icons.forEach((icon, i) => {
@@ -61,15 +72,23 @@ export class ApexWheel {
   }
   open(x: number, y: number): void {
     this.x = x; this.y = y;
-    this.svg.style.left = `${x}px`; this.svg.style.top = `${y}px`;
+    const parent = this.svg.parentElement;
+    const placed = wheelPlacement(x, y, parent?.clientWidth || window.innerWidth, parent?.clientHeight || window.innerHeight, this.settings.wheelScale / 100);
+    this.scale = placed.scale;
+    this.svg.style.left = `${placed.x}px`; this.svg.style.top = `${placed.y}px`;
+    this.svg.style.setProperty('--wheel-scale', String(this.scale));
     this.select(-1);
     this.opened = true;
     this.svg.classList.add('open');
   }
-  move(x: number, y: number): void { if (this.opened) this.select(pickSlice(x - this.x, y - this.y)); }
+  move(x: number, y: number): void { if (this.opened) this.select(this.pick(x, y)); }
+  private pick(x: number, y: number): number {
+    return pickStableSlice((x - this.x) / this.scale, (y - this.y) / this.scale, this.hot,
+      this.settings.wheelDeadZone, this.settings.wheelHysteresis);
+  }
   release(x: number, y: number): { key: string; x: number; y: number } | null {
     if (!this.opened) return null;
-    const item = this.items[pickSlice(x - this.x, y - this.y)];
+    const item = this.items[this.pick(x, y)];
     this.cancel();
     return item ? { key: item.key, x: this.x, y: this.y } : null;
   }

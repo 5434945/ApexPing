@@ -5,6 +5,7 @@ import { DEFAULT_SETTINGS, overlaySettings } from '../../src/shared/settings';
 const h = vi.hoisted(() => ({
   windows: [] as Array<{ x: number; webContents: { send: ReturnType<typeof vi.fn> } }>,
   handlers: new Map<string, (event: unknown, raw: unknown) => void>(),
+  displays: [] as Array<{id:number;bounds:{x:number;y:number;width:number;height:number};scaleFactor:number}>,
 }));
 
 vi.mock('electron', async () => {
@@ -22,20 +23,16 @@ vi.mock('electron', async () => {
     }
     setIgnoreMouseEvents(): void {}
     setAlwaysOnTop(): void {}
-    setBounds(): void {}
+    setBounds = vi.fn();
     showInactive(): void {}
     isDestroyed(): boolean {
       return false;
     }
-    destroy(): void {}
+    destroy = vi.fn();
   }
-  const displays = [
-    { id: 1, bounds: { x: 0, y: 0, width: 1920, height: 1080 }, scaleFactor: 1 },
-    { id: 2, bounds: { x: 1920, y: 0, width: 1280, height: 1024 }, scaleFactor: 1 },
-  ];
   const screen = Object.assign(new Emitter(), {
-    getAllDisplays: () => displays,
-    getPrimaryDisplay: () => displays[0],
+    getAllDisplays: () => h.displays,
+    getPrimaryDisplay: () => h.displays[0],
     dipToScreenRect: (_win: unknown, r: unknown) => r,
   });
   const ipcMain = { on: (channel: string, fn: (event: unknown, raw: unknown) => void) => h.handlers.set(channel, fn) };
@@ -55,6 +52,11 @@ const sent = (i: number): Array<[string, unknown]> =>
   h.windows[i].webContents.send.mock.calls.filter((c) => c[0] !== 'overlay:settings') as Array<[string, unknown]>;
 
 beforeEach(async () => {
+  const {screen}=await import('electron');screen.removeAllListeners();
+  h.displays = [
+    {id:1,bounds:{x:0,y:0,width:1920,height:1080},scaleFactor:1},
+    {id:2,bounds:{x:1920,y:0,width:1280,height:1024},scaleFactor:1},
+  ];
   h.windows.length = 0;
   h.handlers.clear();
   vi.resetModules();
@@ -91,6 +93,20 @@ describe('Apex ping overlay', () => {
     mgr.previewPing('danger');
     expect(sent(0)).toEqual([['ping:spawn',{id:'danger',x:960,y:540}]]);
     expect(shared).not.toHaveBeenCalled();
+  });
+  it('cancels an active gesture and removes its overlay when a monitor is unplugged',async()=>{
+    const {screen}=await import('electron');
+    mgr.handle({type:'wheelOpen',wheel:'ping',x:2000,y:40});
+    const removed=h.windows[1] as unknown as {destroy:ReturnType<typeof vi.fn>};
+    h.displays=h.displays.slice(0,1);screen.emit('display-removed');
+    expect(sent(1).map(([channel])=>channel)).toContain('wheel:cancel');expect(removed.destroy).toHaveBeenCalled();
+    mgr.handle({type:'wheelRelease',wheel:'ping',x:2000,y:40});
+    expect(sent(1).map(([channel])=>channel)).not.toContain('wheel:release');
+  });
+  it('uses the latest display bounds if DPI changes before ready-to-show',async()=>{
+    const win=h.windows[0] as unknown as {emit(name:string):void;setBounds:ReturnType<typeof vi.fn>};
+    h.displays[0]={...h.displays[0],scaleFactor:1.5,bounds:{x:0,y:0,width:1280,height:720}};
+    win.emit('ready-to-show');expect(win.setBounds).toHaveBeenLastCalledWith(h.displays[0].bounds);
   });
   it('shares only valid reports from its own windows', () => {
     const shared = vi.fn(); mgr.on('shared', shared);

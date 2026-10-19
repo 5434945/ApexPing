@@ -11,3 +11,19 @@ export function pickSlice(dx: number, dy: number, deadZone: number = WHEEL.inner
   const deg = ((Math.atan2(dy, dx) * 180) / Math.PI + 90 + 22.5 + 360) % 360;
   return Math.floor(deg / 45) % 8;
 }
+
+/** Keep the current sector until the pointer crosses its boundary by a few degrees. */
+export function pickStableSlice(dx: number, dy: number, previous: number, deadZone = WHEEL.innerR as number, hysteresis = 4): number {
+  const next = pickSlice(dx, dy, deadZone);
+  if (next < 0 || previous < 0 || previous > 7 || next === previous) return next;
+  const angle = (Math.atan2(dy, dx) * 180 / Math.PI + 90 + 360) % 360;
+  const distance = Math.abs(((angle - previous * 45 + 540) % 360) - 180);
+  return distance <= 22.5 + hysteresis ? previous : next;
+}
+
+/** Position a visual wheel inside its viewport while retaining the gesture's original anchor. */
+export function wheelPlacement(x: number, y: number, width: number, height: number, scale: number): { x: number; y: number; scale: number } {
+  const fitted = Math.min(scale, Math.max(0.1, (Math.min(width, height) - 16) / (WHEEL.outerR * 2)));
+  const radius = WHEEL.outerR * fitted + 8;
+  return { x: Math.max(radius, Math.min(width - radius, x)), y: Math.max(radius, Math.min(height - radius, y)), scale: fitted };
+}

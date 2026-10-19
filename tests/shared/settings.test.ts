@@ -182,6 +182,8 @@ describe('helpers', () => {
       pingSizePx: 110, pingDurationS: 3.2, volume: 70, muted: false, tickSound: true,
       wheel: [...DEFAULT_SETTINGS.wheel], clickPingId: 'generic',
       legend: 'wraith', voiceLanguage: 'zh-CN', voiceVolume: 85, voiceEnabled: true,
+      voiceMode: 'all', voiceFavorites: [], voiceBlocked: [], voiceNormalize: true,
+      wheelScale: 100, wheelOpacity: 100, wheelDeadZone: 86, wheelHysteresis: 4,
     });
   });
 

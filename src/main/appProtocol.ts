@@ -48,9 +48,13 @@ async function fetchUncached(file: string): Promise<Response> {
 }
 
 /** Host `emotes` from `emoteDirs()`; host `app` from `rendererRoot` when set (production); anything else is not found. */
-export function serveAppScheme(opts: { rendererRoot: string | null; emoteDirs: () => readonly string[] }): void {
+export function serveAppScheme(opts: { rendererRoot: string | null; emoteDirs: () => readonly string[]; voiceRoot?: string }): void {
   protocol.handle(APP_SCHEME, (request) => {
     const url = new URL(request.url);
+    if (url.host === 'app' && url.pathname.startsWith('/voices/') && opts.voiceRoot) {
+      const file = resolveInside(opts.voiceRoot, url.pathname.slice('/voices'.length));
+      if (file && isFile(file, false)) return net.fetch(pathToFileURL(file).toString());
+    }
     if (url.host === 'app' && opts.rendererRoot) {
       const file = resolveInside(opts.rendererRoot, url.pathname);
       if (file) return net.fetch(pathToFileURL(file).toString());

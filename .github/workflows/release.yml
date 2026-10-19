@@ -42,12 +42,17 @@ jobs:
       - run: npm run test:helper
       - run: npm test
       - run: npm run dist
+      - run: npm run package:editions
       - name: Check Windows artifacts
         shell: bash
         run: |
           version=$(node -p "require('./package.json').version")
           test -s "release/ApexPing-Setup-${version}.exe"
           test -s "release/ApexPing-Setup-${version}.exe.blockmap"
+          test -s "release/ApexPing-${version}-Windows-x64.zip"
+          test -s "release/ApexPing-${version}-Windows-x64-base.zip"
+          test -s "release/ApexPing-${version}-voices-zh-CN.zip"
+          test -s "release/ApexPing-${version}-voices-en.zip"
       - uses: actions/upload-artifact@v4
         if: github.event_name == 'workflow_dispatch'
         with:
@@ -55,6 +60,7 @@ jobs:
           path: |
             release/ApexPing-Setup-*.exe
             release/ApexPing-Setup-*.exe.blockmap
+            release/ApexPing-*.zip
           if-no-files-found: error
           retention-days: 7
       - name: Upload the installer and blockmap
@@ -67,6 +73,10 @@ jobs:
           gh release upload "$GITHUB_REF_NAME" \
             "release/ApexPing-Setup-${GITHUB_REF_NAME#v}.exe" \
             "release/ApexPing-Setup-${GITHUB_REF_NAME#v}.exe.blockmap" \
+            "release/ApexPing-${GITHUB_REF_NAME#v}-Windows-x64.zip" \
+            "release/ApexPing-${GITHUB_REF_NAME#v}-Windows-x64-base.zip" \
+            "release/ApexPing-${GITHUB_REF_NAME#v}-voices-zh-CN.zip" \
+            "release/ApexPing-${GITHUB_REF_NAME#v}-voices-en.zip" \
             --clobber
 
   mac:

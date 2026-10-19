@@ -5,7 +5,7 @@ import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 class Node {
-  attrs = new Map<string,string>(); children: Node[] = []; style: Record<string,string> = {}; textContent='';
+  attrs = new Map<string,string>(); children: Node[] = []; style = {setProperty:vi.fn(),left:'',top:''}; textContent='';
   classes = new Set<string>();
   classList = {add:(v:string)=>this.classes.add(v),remove:(v:string)=>this.classes.delete(v),
     toggle:(v:string,on:boolean)=>on?this.classes.add(v):this.classes.delete(v)};
@@ -14,6 +14,7 @@ class Node {
   append(n:Node) {this.children.push(n);}
 }
 function setup() {
+  vi.stubGlobal('window',{innerWidth:1920,innerHeight:1080});
   vi.stubGlobal('document',{createElementNS:(_:string,t:string)=>new Node(t)});
   const svg=new Node('svg'),hover=vi.fn(),wheel=new ApexWheel(svg as unknown as SVGSVGElement,hover);
   wheel.setItems(DEFAULT_WHEEL.map(key=>({key,icon:`${key}.png`})));

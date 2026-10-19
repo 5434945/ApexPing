@@ -9,6 +9,7 @@ import { parseRoomCode } from './roomCode';
 import { sanitizeName } from './roomProtocol';
 import { isVersion } from './update';
 import { isValidWheel } from './wheelLayout';
+import { isVoicePath } from './voiceSelection';
 
 export type NamedTrigger = 'alt' | 'ctrl' | 'shift' | 'win' | 'capslock' | 'mouse4' | 'mouse5';
 export type TriggerKey = NamedTrigger | { vk: number };
@@ -40,6 +41,16 @@ export interface Settings {
   voiceLanguage: VoiceLanguage;
   voiceVolume: number;
   voiceEnabled: boolean;
+  favoriteLegends: LegendId[];
+  recentLegends: LegendId[];
+  voiceMode: 'all' | 'selected';
+  voiceFavorites: string[];
+  voiceBlocked: string[];
+  voiceNormalize: boolean;
+  wheelScale: number;
+  wheelOpacity: number;
+  wheelDeadZone: number;
+  wheelHysteresis: number;
   muted: boolean;
   tickSound: boolean;
   launchAtStartup: boolean;
@@ -84,6 +95,16 @@ export const DEFAULT_SETTINGS: Settings = {
   voiceLanguage: 'zh-CN',
   voiceVolume: 85,
   voiceEnabled: true,
+  favoriteLegends: [],
+  recentLegends: [],
+  voiceMode: 'all',
+  voiceFavorites: [],
+  voiceBlocked: [],
+  voiceNormalize: true,
+  wheelScale: 100,
+  wheelOpacity: 100,
+  wheelDeadZone: 86,
+  wheelHysteresis: 4,
   muted: false,
   tickSound: true,
   launchAtStartup: false,
@@ -105,12 +126,16 @@ export const LIMITS = {
   pingDurationS: { min: 1, max: 8, step: 0.1 },
   volume: { min: 0, max: 100, step: 1 },
   voiceVolume: { min: 0, max: 100, step: 1 },
+  wheelScale: { min: 65, max: 135, step: 5 },
+  wheelOpacity: { min: 30, max: 100, step: 5 },
+  wheelDeadZone: { min: 50, max: 105, step: 1 },
+  wheelHysteresis: { min: 0, max: 10, step: 1 },
   incomingPingLimit: { min: 0, max: 20, step: 1 },
 } as const;
 
 type NumKey = keyof typeof LIMITS;
 type BoolKey = 'enabledOnStart' | 'clickPing' | 'gameCheck' | 'muted' | 'tickSound' | 'launchAtStartup' | 'allowInternet' | 'rejoinRoom' | 'roomMuted'
-  | 'autoUpdateCheck' | 'voiceEnabled';
+  | 'autoUpdateCheck' | 'voiceEnabled' | 'voiceNormalize';
 
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 const isVk = (v: unknown): v is number => Number.isInteger(v) && (v as number) >= 1 && (v as number) <= 254;
@@ -189,6 +214,16 @@ export function normalizeSettings(raw: unknown, platform: Platform = 'win', iden
     voiceLanguage: isVoiceLanguage(r.voiceLanguage) ? r.voiceLanguage : DEFAULT_SETTINGS.voiceLanguage,
     voiceVolume: num(r.voiceVolume, 'voiceVolume'),
     voiceEnabled: bool(r.voiceEnabled, 'voiceEnabled'),
+    favoriteLegends: Array.isArray(r.favoriteLegends) ? [...new Set(r.favoriteLegends.filter(isLegendId))].slice(0, 28) : [],
+    recentLegends: Array.isArray(r.recentLegends) ? [...new Set(r.recentLegends.filter(isLegendId))].slice(0, 6) : [],
+    voiceMode: r.voiceMode === 'selected' ? 'selected' : 'all',
+    voiceFavorites: Array.isArray(r.voiceFavorites) ? [...new Set(r.voiceFavorites.filter(isVoicePath))].slice(0, 16000) : [],
+    voiceBlocked: Array.isArray(r.voiceBlocked) ? [...new Set(r.voiceBlocked.filter(isVoicePath))].slice(0, 16000) : [],
+    voiceNormalize: bool(r.voiceNormalize, 'voiceNormalize'),
+    wheelScale: num(r.wheelScale, 'wheelScale'),
+    wheelOpacity: num(r.wheelOpacity, 'wheelOpacity'),
+    wheelDeadZone: num(r.wheelDeadZone, 'wheelDeadZone'),
+    wheelHysteresis: num(r.wheelHysteresis, 'wheelHysteresis'),
     muted: bool(r.muted, 'muted'),
     tickSound: bool(r.tickSound, 'tickSound'),
     launchAtStartup: bool(r.launchAtStartup, 'launchAtStartup'),
@@ -235,10 +270,14 @@ export type OverlaySettings = Pick<
   Settings,
   'pingSizePx' | 'pingDurationS' | 'volume' | 'muted' | 'tickSound' | 'wheel' | 'clickPingId'
   | 'legend' | 'voiceLanguage' | 'voiceVolume' | 'voiceEnabled'
+  | 'voiceMode' | 'voiceFavorites' | 'voiceBlocked' | 'voiceNormalize'
+  | 'wheelScale' | 'wheelOpacity' | 'wheelDeadZone' | 'wheelHysteresis'
 >;
 
 export const overlaySettings = (s: Settings): OverlaySettings => ({
   pingSizePx: s.pingSizePx, pingDurationS: s.pingDurationS, volume: s.volume, muted: s.muted, tickSound: s.tickSound,
   wheel: [...s.wheel], clickPingId: s.clickPingId,
   legend: s.legend, voiceLanguage: s.voiceLanguage, voiceVolume: s.voiceVolume, voiceEnabled: s.voiceEnabled,
+  voiceMode: s.voiceMode, voiceFavorites: [...s.voiceFavorites], voiceBlocked: [...s.voiceBlocked], voiceNormalize: s.voiceNormalize,
+  wheelScale: s.wheelScale, wheelOpacity: s.wheelOpacity, wheelDeadZone: s.wheelDeadZone, wheelHysteresis: s.wheelHysteresis,
 });

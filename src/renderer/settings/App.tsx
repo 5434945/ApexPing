@@ -14,6 +14,7 @@ import type { WheelPatch } from '../../shared/wheelLayout';
 import { api } from './api';
 import { AboutSection } from './components/AboutSection';
 import { LegendSection } from './components/LegendSection';
+import { WheelTuning } from './components/WheelTuning';
 import { KeyCapture } from './components/KeyCapture';
 import { PermissionCard } from './components/PermissionCard';
 import { RoomSection } from './components/RoomSection';
@@ -198,6 +199,7 @@ function SettingsPage({ settings: s, status, update }: { settings: Settings; sta
           labels={{ title: t.wheelTitle, desc: t.wheelDesc(trigger), poolTitle: t.allPings, poolDesc: t.allPingsDesc }}
           onChange={(patch) => void update(pingPatch(patch))} onPreview={(id) => void api.previewPing(id)} />
 
+        <WheelTuning settings={s} update={update} />
         <div className="section" id="legends">{t.lang.startsWith('zh') ? '英雄与语音' : 'Legend & Voice'}</div>
         <LegendSection settings={s} update={update} />
 

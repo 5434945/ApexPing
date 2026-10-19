@@ -188,7 +188,8 @@ export class OverlayManager extends EventEmitter {
     win.webContents.on('did-finish-load', () => win.webContents.send('overlay:settings', this.settings));
     win.once('ready-to-show', () => {
       win.showInactive();
-      win.setBounds(d.bounds); // re-apply: mixed-DPI setups can size the first frame wrong
+      const current = screen.getAllDisplays().find(display => display.id === d.id);
+      if (current) win.setBounds(current.bounds); // A display may have changed DPI while its window was loading.
     });
     void loadPage(win, 'overlay');
     return win;

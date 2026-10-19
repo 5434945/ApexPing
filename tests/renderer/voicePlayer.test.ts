@@ -45,3 +45,11 @@ it('ignores nonfinite volume without starting playback',()=>{
   new VoicePlayer(catalogue).play('ash','en','danger',NaN,vi.fn());
   expect(instances).toHaveLength(0);
 });
+it('applies blocking to an existing shuffle bag and treats all-blocked as intentional silence',()=>{
+  const catalogue={'en/ash/danger':['a.ogg','b.ogg']},p=new VoicePlayer(catalogue,()=>.5),missing=vi.fn();
+  p.play('ash','en','danger',1,missing);
+  p.play('ash','en','danger',1,missing,{voiceMode:'all',voiceFavorites:[],voiceBlocked:['a.ogg'],voiceNormalize:false});
+  expect(instances[1].src).toBe('../b.ogg');
+  p.play('ash','en','danger',1,missing,{voiceMode:'all',voiceFavorites:[],voiceBlocked:['a.ogg','b.ogg'],voiceNormalize:false});
+  expect(instances).toHaveLength(2);expect(instances[1].pause).toHaveBeenCalled();expect(missing).not.toHaveBeenCalled();
+});

@@ -21,6 +21,7 @@ const wheel = new ApexWheel(svg, () => {
 function applySettings(s: OverlaySettings): void {
   voice.stop();
   settings = s;
+  wheel.configure(s);
   wheel.setItems(pingsFor(s.wheel).map((p) => ({ key: p.id, icon: textureUrl(p.icon) })));
 }
 applySettings(settings);
@@ -31,7 +32,7 @@ function ping(def: PingDef, x: number, y: number, tag?: PingTag, legend?: Legend
   if (!tag || isLegendId(legend)) {
     voice.play(legend ?? settings.legend, settings.voiceLanguage, def.id,
       settings.muted || !settings.voiceEnabled ? 0 : settings.voiceVolume / 100,
-      (path) => window.overlay.reportMissingAssets([path]));
+      (path) => window.overlay.reportMissingAssets([path]), settings);
   }
 }
 window.overlay.on('overlay:settings', applySettings);

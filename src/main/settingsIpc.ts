@@ -1,4 +1,5 @@
-import { globalShortcut, ipcMain, shell } from 'electron';
+import { dialog, globalShortcut, ipcMain, shell } from 'electron';
+import type { VoicePacks } from './voicePacks';
 import type { Strings } from '../shared/i18n';
 import { SETTINGS_CH, type About, type AppStatus, type SetSettingsResult } from '../shared/ipc';
 import { hotkeyLabel, hotkeyToAccelerator, type Hotkey } from '../shared/keys';
@@ -18,6 +19,7 @@ export interface SettingsIpcDeps {
   getStatus(): AppStatus;
   setEnabled(on: boolean): void;
   preview(id: PingId): void;
+  voicePacks?: VoicePacks;
   about(): About;
   retryHelper(): void;
   setCapturing(on: boolean): void;
@@ -79,6 +81,14 @@ export function registerSettingsIpc(d: SettingsIpcDeps): void {
     if (p) d.preview(p.id);
   });
   ipcMain.handle(SETTINGS_CH.about, () => d.about());
+  ipcMain.handle(SETTINGS_CH.voicePacks, () => d.voicePacks?.status() ?? []);
+  ipcMain.handle(SETTINGS_CH.importVoicePack, async () => {
+    if (!d.voicePacks) return {ok:false,error:'Voice packs unavailable'};
+    const selected = await dialog.showOpenDialog({properties:['openDirectory']});
+    if (selected.canceled || !selected.filePaths[0]) return {ok:false,cancelled:true};
+    try {await d.voicePacks.import(selected.filePaths[0]);return {ok:true};}
+    catch (e) {return {ok:false,error:e instanceof Error ? e.message : 'Import failed'};}
+  });
   ipcMain.handle(SETTINGS_CH.openFolder, async () => {
     await shell.openPath(d.store.dir);
   });

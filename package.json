@@ -1,17 +1,17 @@
 {
   "name": "apexping",
   "productName": "ApexPing",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "private": true,
   "description": "Apex-style desktop ping wheel, based on lolPing",
   "author": "Danrui Meng (https://github.com/darrenprx)",
   "license": "MIT",
-  "homepage": "https://github.com/darrenprx/lolPing#readme",
+  "homepage": "https://github.com/5434945/ApexPing#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/darrenprx/lolPing.git"
+    "url": "https://github.com/5434945/ApexPing.git"
   },
-  "bugs": "https://github.com/darrenprx/lolPing/issues",
+  "bugs": "https://github.com/5434945/ApexPing/issues",
   "main": "out/main/index.js",
   "scripts": {
     "dev": "electron-vite dev",
@@ -22,6 +22,7 @@
     "build:helper": "node native/hook-helper/run.mjs build",
     "test:helper": "node native/hook-helper/run.mjs test",
     "dist": "npm run build:helper && electron-vite build && electron-builder --win --publish never",
+    "package:editions": "node tools/package-editions.cjs",
     "dist:mac": "npm run build:helper && electron-vite build && electron-builder --mac --arm64 --publish never",
     "dev:site": "vite --config site/vite.config.ts",
     "build:site": "vite build --config site/vite.config.ts",
@@ -51,6 +52,7 @@
   "build": {
     "appId": "com.apexping.app",
     "productName": "ApexPing",
+    "asarUnpack": ["out/renderer/voices/**/*"],
     "directories": {
       "output": "release",
       "buildResources": "build"

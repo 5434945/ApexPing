@@ -28,6 +28,7 @@ import { trayUpdateHandlers } from './trayUpdate';
 import { MacBackend, RELEASES_API } from './updateMac';
 import { WinBackend } from './updateWin';
 import { Updater } from './updater';
+import { VoicePacks } from './voicePacks';
 
 const ACCESSIBILITY_PANE = 'x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility';
 
@@ -71,6 +72,7 @@ function start(): void {
   serveAppScheme({
     rendererRoot: process.env.ELECTRON_RENDERER_URL ? null : join(__dirname, '../renderer'), // development pages come from Vite
     emoteDirs: () => [],
+    voiceRoot: join(settingsDir(), 'voice-packs'),
   });
   if (IS_MAC) {
     app.dock?.hide(); // a menu bar app: the Dock icon only shows while settings are open
@@ -339,6 +341,8 @@ function start(): void {
     getStatus: status,
     setEnabled,
     preview: (id) => overlays.previewPing(id),
+    voicePacks: new VoicePacks(join(settingsDir(),'voice-packs'), app.isPackaged
+      ? join(process.resourcesPath,'app.asar.unpacked/out/renderer/voices') : assetPath('voices')),
     about,
     retryHelper: startHelper,
     setCapturing: (on) => {

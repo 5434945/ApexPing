@@ -32,6 +32,9 @@ describe('release workflow', () => {
     expect(win).not.toContain('"release/latest.yml"');
     expect(win).toContain(`"release/${installer}.blockmap"`);
     expect(win).toContain('--clobber');
+    expect(win).toContain('npm run package:editions');
+    for(const suffix of ['Windows-x64','Windows-x64-base','voices-zh-CN','voices-en'])
+      expect(win).toContain(`"release/ApexPing-${'${GITHUB_REF_NAME#v}'}-${suffix}.zip"`);
     expect(job('mac')).toContain(`release/${dmg}`);
   });
 

@@ -7,6 +7,8 @@ export const SETTINGS_CH = {
   statusChanged: 'status:changed',
   setEnabled: 'app:setEnabled',
   preview: 'app:preview',
+  voicePacks: 'voicePacks:get',
+  importVoicePack: 'voicePacks:import',
   about: 'app:about',
   openFolder: 'app:openSettingsFolder',
   openProject: 'app:openProjectPage',

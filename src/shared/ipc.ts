@@ -61,6 +61,7 @@ export interface About {
 }
 
 export type SetSettingsResult = { ok: true; settings: Settings } | { ok: false; error: string; settings: Settings };
+export interface VoicePackStatus { language: 'zh-CN' | 'en'; installed: number; total: number }
 
 // SETTINGS_CH lives in its own module so the settings preload can import it without sharing a chunk
 // with the overlay preload (a sandboxed preload can only require('electron'), never a sibling file).
@@ -76,6 +77,8 @@ export interface SettingsApi {
   onStatus(cb: (s: AppStatus) => void): () => void;
   setEnabled(on: boolean): Promise<void>;
   previewPing(id: PingId): Promise<void>;
+  getVoicePacks(): Promise<VoicePackStatus[]>;
+  importVoicePack(): Promise<{ok: boolean; cancelled?: boolean; error?: string}>;
   getAbout(): Promise<About>;
   openSettingsFolder(): Promise<void>;
   openProjectPage(): Promise<void>;

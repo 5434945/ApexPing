@@ -31,6 +31,40 @@ main.content { overflow: auto; padding: 4px 28px 28px 20px; }
 .desc.inline { display: inline; margin-left: 6px; }
 .card .ctl { display: flex; align-items: center; gap: 10px; }
 .value { min-width: 56px; text-align: right; font-variant-numeric: tabular-nums; }
+.legend-picker, .voice-library { padding: 12px 0 18px; }
+.legend-current { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.legend-current img { object-fit: cover; border-radius: 4px; }
+.legend-current strong { display: block; font-size: 20px; line-height: 28px; }
+.legend-toolbar, .voice-toolbar { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 10px; }
+.legend-toolbar > .fui-Input { width: 220px; max-width: 100%; }
+.legend-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; max-height: 360px; overflow-y: auto; padding: 3px; }
+.legend-cell { position: relative; min-width: 0; border: 1px solid var(--stroke); border-radius: 4px; overflow: hidden; background: var(--card); }
+.legend-cell.selected { outline: 2px solid var(--colorBrandStroke1); outline-offset: -2px; }
+.legend-tile { display: flex; flex-direction: column; align-items: stretch; width: 100%; border: 0; padding: 0; color: inherit; background: transparent; cursor: pointer; font: inherit; }
+.legend-tile:hover { background: var(--card-hover); }
+.legend-tile img { width: 100%; height: 76px; object-fit: cover; }
+.legend-tile span { display: grid; align-items: center; min-height: 34px; padding: 3px; font-size: 12px; line-height: 15px; overflow-wrap: anywhere; }
+.legend-tile:focus-visible { outline: 3px solid var(--colorStrokeFocus2); outline-offset: -3px; }
+.legend-cell .legend-star { position: absolute; right: 2px; top: 2px; min-width: 24px; color: #fff; background: #171a20c9; }
+.legend-star[aria-pressed=true] { color: #ffd15a; }
+.voice-toolbar { justify-content: flex-start; }
+.voice-line { display: flex; align-items: center; min-height: 42px; gap: 8px; border-bottom: 1px solid var(--stroke); }
+.voice-line-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+.voice-line.blocked .voice-line-name { opacity: .55; text-decoration: line-through; }
+.voice-duration { font-size: 12px; color: var(--text3); min-width: 30px; text-align: right; }
+.voice-pagination { display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin-top: 10px; }
+.voice-pagination span { min-width: 48px; text-align: center; }
+.empty-state { padding: 12px; color: var(--text3); text-align: center; }
+.voice-line [aria-pressed=true] { color: var(--colorBrandForeground1); }
+.voice-pack-section { padding: 12px 0; border-top: 1px solid var(--stroke); }
+.voice-pack-status { display: flex; justify-content: space-between; padding: 6px 0; }
+.wheel-preview { position: relative; height: 420px; width: 100%; overflow: hidden; background: #45494e; border-radius: 4px; touch-action: none; }
+.wheel-preview svg { position: absolute; width: 600px; height: 600px; margin: -300px 0 0 -300px; pointer-events: none; }
+.wheel-preview text { fill: white; font: 14px 'Segoe UI', 'Microsoft YaHei', sans-serif; }
+.wheel-preview .apex-wheel-icon { filter: brightness(0) saturate(100%) invert(75%) sepia(88%) saturate(1443%) hue-rotate(338deg) brightness(103%); }
+.wheel-preview .apex-wheel-icon.hostile { filter: brightness(0) saturate(100%) invert(35%) sepia(100%) saturate(2443%) hue-rotate(340deg) brightness(108%); }
+.wheel-preview svg { transform: scale(var(--wheel-scale, 1)); opacity: var(--wheel-opacity, 1); }
+@media (max-width: 900px) { .card { flex-wrap: wrap; } .card .ctl { max-width: 100%; flex-wrap: wrap; margin-left: auto; } }
 /* Fluent draws a tick per step on the rail; with 38-100 steps they merge into a dark dashed line. */
 .card .fui-Slider__rail::before { background-image: none; }
 .status { min-height: 76px; }

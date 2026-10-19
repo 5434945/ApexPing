@@ -1,10 +1,24 @@
 # ApexPing
 
-Windows 桌面 Apex 风格标记轮盘，基于 [darrenprx/lolPing](https://github.com/darrenprx/lolPing) 改造。当前版本：0.3.1 测试版。
+Windows 桌面 Apex 风格标记轮盘，基于 [darrenprx/lolPing](https://github.com/darrenprx/lolPing) 改造。当前开发版本：0.4.0。
 
 这是独立桌面覆盖层，不注入游戏进程，不向 Apex 游戏内发送标记。
 
-[下载 Windows 便携版](https://github.com/5434945/ApexPing/releases/tag/v0.3.1) · [本次更新说明](CHANGELOG.md)
+[下载最新正式版](https://github.com/5434945/ApexPing/releases/latest) · [更新说明](CHANGELOG.md)
+
+![英雄选择与双语语音](docs/media/legends-0.4.0.png)
+
+![真实操作演示：搜索并选择英雄](docs/media/legends-0.4.0.gif)
+
+## 0.4.0 新功能
+
+- 28 位英雄头像网格，中英文搜索、收藏及最近使用；头像来自 [EA 官方英雄页](https://www.ea.com/games/apex-legends/apex-legends/game-objects/characters-hub)，逐项来源记录在 `assets/legend-portraits.json`。
+- 按标记动作逐条试听，收藏或屏蔽语音。“精选”优先播放收藏；没有收藏时按原始情境标签和时长使用最多 5 条语音，并非人工逐条听审。
+- 可选语音响度均衡：根据原始音频测量结果调整播放增益，并限制峰值；不重写 OGG 音频或游戏文件。
+- 可调整轮盘大小、不透明度、中心取消范围、扇区边界容错；设置页带实时预览。屏幕边缘完整显示轮盘，标记位置保持在呼出点。
+- 完整离线版继续保留；基础版不含语音，可单独导入中文或英文包。每条文件通过原始导出 SHA-256 校验后安装到 `%APPDATA%\ApexPing\voice-packs`，失败时保留已安装语音。
+
+语音包用法：先解压 `ApexPing-0.4.0-voices-zh-CN.zip` 或 `ApexPing-0.4.0-voices-en.zip`，在“英雄与语音”底部导入包含 `apexping-voice-pack.json` 的文件夹。完整离线版不需要这一步。
 
 ## 操作
 
@@ -38,6 +52,8 @@ npm run dev
 ```
 
 构建安装包：`npm run dist`。生产构建：`npm run build`。项目不提交 `node_modules`、`out`、`release` 或原生编译产物。
+
+完成 Windows 解包构建后，运行 `npm run package:editions` 生成完整离线版、基础版和双语分包 ZIP。语音文件使用 `asarUnpack`，便于基础版通过独立语音包补全。
 
 ## 验证状态
 
